@@ -1,0 +1,14 @@
+name: Test
+on:
+  push:
+    branches: [ main ]
+
+    schedule:
+      - cron: '0 0 * * 1'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: dolfinx/dolfinx
+    steps:
+      - uses: actions/checkout@v2
