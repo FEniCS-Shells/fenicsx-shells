@@ -1,3 +1,7 @@
+# Typical DOLFINx output
+*.xdmf
+*.h5
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

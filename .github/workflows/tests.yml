@@ -7,7 +7,7 @@ on:
       - cron: '0 0 * * 1'
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
     container: dolfinx/dolfinx
     steps:
@@ -16,3 +16,11 @@ jobs:
       - name: Install FEniCS-Shellsx
         run: |
           python3 -m pip install .
+      - name: Convert demo notebooks to scripts
+        run: |
+          cd demo/documented
+          jupyter-nbconvert --to python */*.ipynb
+      - name: Run demos
+        run: |
+          cd demo/documented
+          python3 -m pytest .
