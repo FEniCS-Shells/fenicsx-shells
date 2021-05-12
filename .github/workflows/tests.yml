@@ -1,4 +1,4 @@
-name: Test
+name: FEniCS-Shellsx CI
 on:
   push:
     branches: [ main ]
@@ -11,4 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     container: dolfinx/dolfinx
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install FEniCS-Shellsx
+        run: |
+          cd fenics_shellsx
+          python3 -m pip install .
