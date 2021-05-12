@@ -1,2 +1,0 @@
-add_library(fenics_shellsx SHARED assembler.cpp)
-target_compile_definitions(fenics_shellsx PUBLIC EIGEN_MAX_ALIGN_BYTES=32)
