@@ -12,6 +12,7 @@
 #include <dolfinx/fem/utils.h>
 #include <dolfinx/fem/Constant.h>
 #include <dolfinx/fem/FunctionSpace.h>
+#include <dolfinx/la/PETScMatrix.h>
 #include <dolfinx/la/PETScVector.h>
 #include <dolfinx/la/SparsityPattern.h>
 #include <dolfinx/mesh/Mesh.h>
@@ -71,7 +72,7 @@ std::pair<Mat, Vec> assemble(const fem::Form<T>& a, const fem::Form<T>& L)
   // Create mat_set_values function pointer
   std::function<int(std::int32_t, const std::int32_t*, std::int32_t,
                     const std::int32_t*, const T*)>
-      mat_set_values = la::PETScMatrix::add_fn(A.mat());
+      mat_set_values = la::PETScMatrix::set_fn(A.mat(), InsertMode::ADD_VALUES);
   MatZeroEntries(A.mat());
 
   // Extract raw view into PETSc Vec memory.
@@ -125,7 +126,6 @@ std::pair<Mat, Vec> assemble(const fem::Form<T>& a, const fem::Form<T>& L)
   assert(map);
   const int num_cells = map->size_local();
 
-  const fem::FormIntegrals<T>& integrals = a.integrals();
   using type = fem::IntegralType;
 
   assert(a.integrals().num_integrals(type::cell) == 1);
