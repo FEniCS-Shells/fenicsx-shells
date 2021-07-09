@@ -20,8 +20,6 @@ find_package(pybind11 CONFIG REQUIRED)
 
 pybind11_add_module(_fenics_shellsxcpp MODULE fenics_shellsx/cpp/wrapper.cpp)
 
-target_sources(_fenics_shellsxcpp PRIVATE fenics_shellsx/cpp/assembler.cpp)
-
 # Add DOLFINx libraries and other config
 target_include_directories(_fenics_shellsxcpp PRIVATE ${PETSC4PY_INCLUDE_DIRS})
 target_link_libraries(_fenics_shellsxcpp PRIVATE pybind11::module dolfinx Eigen3::Eigen)
