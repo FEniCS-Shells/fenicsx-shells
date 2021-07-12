@@ -41,7 +41,7 @@ from ufl import sym, grad, tr, dx, inner, split
 
 from fenics_shellsx import assemble
 
-mesh = UnitSquareMesh(MPI.COMM_WORLD, 32, 32, CellType.triangle,
+mesh = UnitSquareMesh(MPI.COMM_WORLD, 5, 5, CellType.triangle,
                       dolfinx.cpp.mesh.GhostMode.shared_facet)
 
 U_el = MixedElement([MixedElement([VectorElement("Lagrange", ufl.triangle, 2), FiniteElement("Lagrange", ufl.triangle, 1)]),
@@ -59,7 +59,7 @@ R_gamma_, p_ = split(mixed_)
 E = 10920.0
 nu = 0.3
 kappa = 5.0/6.0
-t = 0.001
+t = 0.1
 
 D = (E*t**3)/(24.0*(1.0 - nu**2))
 k = sym(grad(theta_))
@@ -95,9 +95,13 @@ dofs0 = locate_dofs_topological(U, 1, facets)
 bcs = [DirichletBC(u0, dofs0)]
 
 J_dolfin = dolfinx.fem.Form(J)
-F_dolfin = dolfinx.fem.Form(F)
+F_dolfin = dolfinx.fem.Form(-F)
 A, b = assemble(J_dolfin._cpp_object, F_dolfin._cpp_object)
 A.assemble()
+
+print(A.convert('dense').getDenseArray())
+# Checked against DOLFIN, same norm.
+print(A.norm())
 
 ksp = PETSc.KSP().create(MPI.COMM_WORLD)
 
