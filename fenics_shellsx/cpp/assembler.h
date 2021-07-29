@@ -5,6 +5,7 @@
 #include <Eigen/Dense>
 
 #include <dolfinx/common/IndexMap.h>
+#include <dolfinx/fem/DirichletBC.h>
 #include <dolfinx/fem/DofMap.h>
 #include <dolfinx/fem/FiniteElement.h>
 #include <dolfinx/fem/Form.h>
@@ -32,7 +33,7 @@ using namespace dolfinx;
 // Split down into inlined functions for improved readability.
 
 template <typename T>
-std::pair<Mat, Vec> assemble(const fem::Form<T>& a, const fem::Form<T>& L)
+std::pair<Mat, Vec> assemble(const fem::Form<T>& a, const fem::Form<T>& L, const fem::DirichletBC<T>& bc)
 {
   assert(a.rank() == 2);
   assert(L.rank() == 1);
@@ -52,16 +53,21 @@ std::pair<Mat, Vec> assemble(const fem::Form<T>& a, const fem::Form<T>& L)
   assert(dofmap0 == dofmap1);
 
   const std::shared_ptr<const fem::FiniteElement> element
-      = a.function_spaces().at(0)->element();
+    = a.function_spaces().at(0)->element();
   assert(element->num_sub_elements() == 2);
+  const int ndim = dofmap0->list().links(0).size();
 
   const auto primal_dofmap = std::make_shared<const dolfinx::fem::DofMap>(
       dofmap0->extract_sub_dofmap({0}));
+  const int ndim_primal = primal_dofmap->list().links(0).size();
+  std::cout << ndim_primal << std::endl;
+  std::cout << primal_dofmap->bs() << std::endl;
+  assert(primal_dofmap->bs() == 1);
+
   const auto primal_element = element->extract_sub_element({0});
 
   // Make data structures for global assembly
   // Create sparsity pattern
-  // std::array primal_dofmaps{primal_dofmap.get(), primal_dofmap.get()};
   const std::array primal_dofmaps{a.function_spaces().at(0)->dofmap().get(),
                                   a.function_spaces().at(1)->dofmap().get()};
   la::SparsityPattern pattern
@@ -200,6 +206,11 @@ std::pair<Mat, Vec> assemble(const fem::Form<T>& a, const fem::Form<T>& L)
   const auto c_to_f = mesh->topology().connectivity(tdim, tdim - 1);
   assert(c_to_f);
 
+  // Build dof marker
+  std::int32_t primal_dim = primal_dofmap->bs() * (primal_dofmap->index_map->size_local() + primal_dofmap->index_map->num_ghosts());
+  std::vector<bool> dof_markers(primal_dim);
+  bc.mark_dofs(dof_markers);
+
   for (int c = 0; c < num_cells; ++c)
   {
     // Get cell vertex coordinates
@@ -327,7 +338,6 @@ std::pair<Mat, Vec> assemble(const fem::Form<T>& a, const fem::Form<T>& L)
         be += b_macro.block(offset, 0, be.rows(), 1);
       }
     }
-    // TODO: Apply boundary conditions.
 
     // Perform static condensation.
     // TODO: Two calls to same .inverse().
@@ -336,8 +346,19 @@ std::pair<Mat, Vec> assemble(const fem::Form<T>& a, const fem::Form<T>& L)
     be_projected = b_0 + A_02 * A_12.inverse() * A_11 * A_21.inverse() * b_2
                    - A_02 * A_12.inverse() * b_1;
 
-    // Assembly.
     const auto dofs = primal_dofmap->list().links(c);
+    // Apply boundary conditions.
+    for (int i = 0; i < ndim_primal; ++i) {
+        if (dof_markers[dofs[i]]) {
+            Ae_projected.row(i).setZero();
+            Ae_projected.col(i).setZero();
+            Ae_projected(i, i) = 1.0;
+            be_projected(i) = 0.0;
+        }
+    }
+    std::cout << std::endl;
+
+    // Assembly.
     mat_set_values(dofs.size(), dofs.data(), dofs.size(), dofs.data(),
                    Ae_projected.data());
 
