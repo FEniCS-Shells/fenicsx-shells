@@ -1,0 +1,5 @@
+FROM dolfinx/lab:latest
+LABEL description="DOLFINx Jupyter Lab with useful extras"
+
+RUN python3 -m pip install jupyterlab_code_formatter autopep8 isort
+
