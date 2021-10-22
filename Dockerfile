@@ -4,8 +4,8 @@ LABEL description="DOLFIN-X Jupyter Lab for Binder"
 USER root
 
 RUN apt-get update && \
-	apt-get install python3-pip -y
-    
+    apt-get install python3-pip -y
+
 RUN pip3 install --no-cache --upgrade pip && \
     pip3 install --no-cache notebook
 
