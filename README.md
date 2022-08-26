@@ -10,11 +10,7 @@ Simple and extensible plate and shell finite element models through automatic co
 
 ## Authors
 
-Matteo Brunetti, Università da Pisa, Pisa.
-
 Jack S. Hale, University of Luxembourg, Luxembourg.
-
-Corrado Maurini, Sorbonnes Université, Paris.
 
 FEniCS-Shellsx contains code from the original FEniCS-Shells project
 hosted at https://bitbucket.org/unilucompmech/fenics-shells.
