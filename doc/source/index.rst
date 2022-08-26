@@ -11,10 +11,19 @@ Welcome to FEniCSx-Shells's documentation!
    :caption: Contents:
 
 
-
 Indices and tables
 ==================
 
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+
+Linear Reissner-Mindlin plate problems using the Duran-Liberman reduction
+operator (MITC) and MITC7 to cure shear-locking:
+
+.. toctree::
+    :titlesonly:
+    :maxdepth: 1
+
+    demo/demo_reissner-mindlin-clamped.md
