@@ -19,11 +19,20 @@ Indices and tables
 * :ref:`search`
 
 
-Linear Reissner-Mindlin plate problems using the Duran-Liberman reduction
-operator (MITC) and MITC7 to cure shear-locking:
+Clamped linear Reissner-Mindlin plate problem using the Duran-Liberman reduction
+operator (MITC) to cure shear-locking:
 
 .. toctree::
     :titlesonly:
     :maxdepth: 1
 
     demo/demo_reissner-mindlin-clamped.md
+
+Simply-supported linear Reissner-Mindlin plate problem using the MITC4
+reduction operator to cure shear-locking:
+
+.. toctree::
+    :titlesonly:
+    :maxdepth: 1
+
+    demo/demo_reissner-mindlin-simply-supported.md
