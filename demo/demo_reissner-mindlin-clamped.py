@@ -234,7 +234,7 @@ if len(cells) > 0:
     # mesh.
 
     def test_center_displacement():
-        assert(np.isclose(value[0], 1.285E-6, atol=1E-3, rtol=1E-3))
+        assert np.isclose(value[0], 1.285E-6, atol=1E-3, rtol=1E-3)
 
 with XDMFFile(MPI.COMM_WORLD, "w.xdmf", "w") as f:
     f.write_mesh(mesh)
