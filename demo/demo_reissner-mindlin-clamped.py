@@ -32,7 +32,7 @@ import numpy as np
 
 import dolfinx
 import ufl
-from dolfinx.fem import (Function, FunctionSpace, dirichletbc)
+from dolfinx.fem import Function, FunctionSpace, dirichletbc
 from dolfinx.fem.petsc import LinearProblem
 from dolfinx.io.utils import XDMFFile
 from dolfinx.mesh import CellType, create_unit_square
