@@ -68,9 +68,9 @@ class CMakeBuild(build_ext):
 
 
 setup(name='fenicsx-shells',
-      version='0.1.0.dev0',
+      version='0.5.0.dev0',
       description='Basix Python interface',
-      url="https://github.com/FEniCS/basix",
+      url="https://github.com/FEniCS-Shells/fenicsx-shells",
       author='FEniCSx-Shells authors',
       maintainer_email="jack.hale@uni.lu",
       license="LGPL v3.0 or later",
