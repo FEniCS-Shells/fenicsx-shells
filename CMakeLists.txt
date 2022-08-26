@@ -4,7 +4,7 @@ project(fenicsx_shells VERSION "0.1.0")
 
 set(Python_FIND_IMPLEMENTATIONS CPython)
 find_package(Python REQUIRED COMPONENTS Interpreter Development)
-find_package(DOLFINx REQUIRED)
+find_package(DOLFINX REQUIRED)
 
 # Set C++ standard before finding pybind11
 set(CMAKE_CXX_STANDARD 20)
