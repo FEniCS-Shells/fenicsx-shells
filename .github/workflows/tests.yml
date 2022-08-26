@@ -13,10 +13,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Install FEniCS-Shellsx
+      - name: Install FEniCSx-Shells
         run: |
           python3 -m pip install .
       - name: Run demos
         run: |
-          cd demo/documented
-          python3 -m pytest .
+          python3 -m pytest demo
