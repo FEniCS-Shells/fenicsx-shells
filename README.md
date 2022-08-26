@@ -1,12 +1,14 @@
-# FEniCS-Shellsx
+# FEniCSx-Shells
 
 A FEniCS Project-based library for simulating thin structures.
 
-*FEniCS-Shellsx is an experimental version targeting the new FEniCSx environment.*
+*FEniCSx-Shells is an experimental version targeting the new FEniCSx environment.*
 
-The foundational aspects of the FEniCS-Shellsx project are described in the paper:
+The foundational aspects of the FEniCSx-Shells project are described in the paper:
 
-Simple and extensible plate and shell finite element models through automatic code generation tools, J. S. Hale, M. Brunetti, S. P. A. Bordas, C. Maurini. Computers & Structures, 209, 163-181, doi:10.1016/j.compstruc.2018.08.001.
+Simple and extensible plate and shell finite element models through automatic
+code generation tools, J. S. Hale, M. Brunetti, S. P. A. Bordas, C. Maurini.
+Computers & Structures, 209, 163-181, [doi:10.1016/j.compstruc.2018.08.001](https://doi.org/10.1016/j.compstruc.2018.08.001).
 
 ## Authors
 
