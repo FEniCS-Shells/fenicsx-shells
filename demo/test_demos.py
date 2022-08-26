@@ -21,6 +21,7 @@ for f in demo_files:
 
 print(demos)
 
+
 @pytest.mark.serial
 @pytest.mark.parametrize("path,name", demos)
 def test_demos(path, name):

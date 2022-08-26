@@ -152,7 +152,9 @@ gamma = grad(w_) - theta_
 # field $p \in \mathrm{NED}_1$. We can write the Lagrangian functional of this
 # constraint as:
 #
-# $$\Pi_R(\gamma, \gamma_R, p) = \int_{e} \left( \left\lbrace \gamma_R - \gamma \right\rbrace \cdot t \right) \cdot \left( p \cdot t \right) \; \mathrm{d}s$$
+# $$\Pi_R(\gamma, \gamma_R, p) =
+#   \int_{e} \left( \left\lbrace \gamma_R - \gamma \right\rbrace \cdot t \right)
+#   \cdot \left( p \cdot t \right) \; \mathrm{d}s$$
 #
 # where $e$ are all of edges of the cells in the mesh and $t$ is the tangent
 # vector on each edge.
@@ -169,8 +171,9 @@ n = ufl.FacetNormal(mesh)
 t = ufl.as_vector((-n[1], n[0]))
 
 
-def inner_e(x, y): return (inner(x, t)*inner(y, t))('+') * \
-    dSp + (inner(x, t)*inner(y, t))*dsp
+def inner_e(x, y):
+    return (inner(x, t)*inner(y, t))('+') * \
+        dSp + (inner(x, t)*inner(y, t))*dsp
 
 
 Pi_R = inner_e(gamma - R_gamma_, p_)

@@ -16,15 +16,13 @@ jobs:
       
       - name: Flake8 checks
         run: |
-          cd python/
-          python3 -m flake8 fenicsx-shells
+          python3 -m flake8 fenicsx_shells
           python3 -m flake8 demo
           python3 -m flake8 test
       - name: isort checks (non-blocking)
         continue-on-error: true
         run: |
-          cd python/
-          python3 -m isort --check fenicsx-shells
+          python3 -m isort --check fenicsx_shells
           python3 -m isort --check demo
           python3 -m isort --check test
       
