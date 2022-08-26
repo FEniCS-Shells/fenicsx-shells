@@ -159,7 +159,7 @@ gamma = grad(w_) - theta_
 # where $e$ are all of edges of the cells in the mesh and $t$ is the tangent
 # vector on each edge.
 #
-# Writing this operator out in UFL is quite verbose, so `fenics_shellsx`
+# Writing this operator out in UFL is quite verbose, so `fenicsx_shells`
 # includes a special inner product function `inner_e` to help. However, we
 # choose to write this function in full here.
 
