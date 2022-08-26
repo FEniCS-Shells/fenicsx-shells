@@ -67,18 +67,17 @@ class CMakeBuild(build_ext):
         subprocess.check_call(['cmake', '--build', '.'] + build_args, cwd=self.build_temp, env=env)
 
 
-setup(name='fenics-shellsx',
+setup(name='fenicsx-shells',
       version='0.1.0.dev0',
       description='Basix Python interface',
       url="https://github.com/FEniCS/basix",
-      author='FEniCS Project',
-      author_email="fenics-dev@googlegroups.com",
-      maintainer_email="fenics-dev@googlegroups.com",
-      license="MIT License",
+      author='FEniCSx-Shells authors',
+      maintainer_email="jack.hale@uni.lu",
+      license="LGPL v3.0 or later",
       classifiers=[_f for _f in CLASSIFIERS.split('\n') if _f],
       platforms=["Linux", "Mac OS-X", "Unix"],
-      packages=["fenics_shellsx"],
+      packages=["fenicsx_shells"],
       setup_requires=["pybind11"],
-      ext_modules=[CMakeExtension('fenics_shellsx._fenics_shellsxcpp')],
+      ext_modules=[CMakeExtension('fenicsx_shells._fenicsx_shellscpp')],
       cmdclass=dict(build_ext=CMakeBuild),
       zip_safe=False)
