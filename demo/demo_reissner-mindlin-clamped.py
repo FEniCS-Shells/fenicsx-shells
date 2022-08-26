@@ -9,7 +9,6 @@
 # ---
 
 # # Clamped Reissner-Mindlin plate under uniform load
-# ## Pure DOLFINX implementation
 #
 # This demo program solves the out-of-plane Reissner-Mindlin equations on the
 # unit square with uniform transverse loading with fully clamped boundary
