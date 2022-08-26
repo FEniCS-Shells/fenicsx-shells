@@ -1,4 +1,4 @@
-name: FEniCS-Shellsx CI
+name: FEniCSx-Shells CI
 on:
   push:
     branches: [ main ]
@@ -9,17 +9,13 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    container: dolfinx/lab
+    container: dolfinx/dolfinx:v0.5.0
     steps:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Install FEniCS-Shellsx
         run: |
           python3 -m pip install .
-      - name: Convert demo notebooks to scripts
-        run: |
-          cd demo/documented
-          jupyter-nbconvert --to python */*.ipynb
       - name: Run demos
         run: |
           cd demo/documented
