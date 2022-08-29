@@ -30,7 +30,7 @@ from dolfinx.fem.petsc import LinearProblem
 from dolfinx.io.utils import XDMFFile
 from dolfinx.mesh import CellType, create_unit_square
 from ufl import (FacetNormal, FiniteElement, Identity, Measure, MixedElement,
-                 VectorElement, dx, grad, inner, split, sym, tr)
+                 grad, inner, split, sym, tr)
 
 from mpi4py import MPI
 
@@ -147,12 +147,6 @@ theta, w, M = u_h.split()
 if len(cells) > 0:
     value = w.eval(point, cells[0])
     print(value[0])
-    # NOTE: FEniCS-Shells (old dolfin) `demo/documented/reissner-mindlin-clamped`
-    # gives 1.28506469462e-06 on a 32 x 32 mesh and 1.2703580973e-06 on a 64 x 64
-    # mesh.
-
-    def test_center_displacement():
-        assert np.isclose(value[0], 1.285E-6, atol=1E-3, rtol=1E-3)
 
 with XDMFFile(MPI.COMM_WORLD, "w.xdmf", "w") as f:
     f.write_mesh(mesh)
