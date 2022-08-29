@@ -1,3 +1,3 @@
 #!/bin/bash
 CONTAINER_ENGINE="docker"
-${CONTAINER_ENGINE} run -ti -v $(pwd):/shared -w /shared dolfinx/dolfinx
+${CONTAINER_ENGINE} run -ti -v $(pwd):/shared -w /shared dolfinx/dolfinx:v0.5.0

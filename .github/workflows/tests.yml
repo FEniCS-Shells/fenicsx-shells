@@ -1,4 +1,4 @@
-name: FEniCS-Shellsx CI
+name: FEniCSx-Shells CI
 on:
   push:
     branches: [ main ]
@@ -9,18 +9,41 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    container: dolfinx/lab
+    container: dolfinx/dolfinx:v0.5.0
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Install FEniCS-Shellsx
+      
+      - name: Flake8 checks
+        run: |
+          python3 -m flake8 fenicsx_shells
+          python3 -m flake8 demo
+          python3 -m flake8 test
+      - name: isort checks (non-blocking)
+        continue-on-error: true
+        run: |
+          python3 -m isort --check fenicsx_shells
+          python3 -m isort --check demo
+          python3 -m isort --check test
+      
+      - name: Install FEniCSx-Shells
         run: |
           python3 -m pip install .
-      - name: Convert demo notebooks to scripts
+
+      - name: Build documentation
         run: |
-          cd demo/documented
-          jupyter-nbconvert --to python */*.ipynb
+          cd doc
+          make html
+
       - name: Run demos
         run: |
-          cd demo/documented
-          python3 -m pytest .
+          python3 -m pytest demo
+      
+      - name: Upload Python documentation artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: doc
+          path: |
+            doc/build/html/
+          retention-days: 2
+          if-no-files-found: error

@@ -2,9 +2,9 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(_fenics_shellsxcpp, m)
+PYBIND11_MODULE(_fenicsx_shellscpp, m)
 {
-  m.attr("__version__") = "0.1.0";
+  m.attr("__version__") = "0.1.0.0";
 
   m.def("test", []() { return 0; });
 }
