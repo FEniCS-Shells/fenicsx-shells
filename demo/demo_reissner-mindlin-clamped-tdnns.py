@@ -8,12 +8,27 @@
 #       jupytext_version: 1.14.1
 # ---
 
-# # Clamped Reissner-Mindlin plate under uniform load using TDNNS
+# # Clamped Reissner-Mindlin plate under uniform load using TDNNS element
 #
 # This demo program solves the out-of-plane Reissner-Mindlin equations on the
-# unit square with uniform transverse loading with fully clamped boundary
+# unit square with uniform transverse loading and fully clamped boundary
 # conditions using the TDNNS (tangential displacement normal-normal stress)
-# approach from Pechstein and Schöberl.
+# element developed in:
+#
+# Pechstein, A.S., Schöberl, J. The TDNNS method for Reissner–Mindlin plates.
+# Numer. Math. 137, 713–740 (2017).
+# [doi:10.1007/s00211-017-0883-9](https://doi.org/10.1007/s00211-017-0883-9)
+#
+# The idea behind this element construction is that the rotations, transverse
+# displacement and bending moments are discretised separately. The finite
+# element space for the transverse displacement is chosen such that the
+# gradient is a subset of the rotation space and therefore the Kirchhoff
+# constraint as the thickness parameter tends to zero is exactly satisfied by
+# construction.
+#
+# Mathematically the forms in this work follow exactly that shown in Pechstein
+# and Schöberl except for a few minor notational changes to match the rest of
+# FEniCSx-Shells.
 #
 # It is assumed the reader understands most of the basic functionality of the
 # new FEniCSx Project.
@@ -28,7 +43,7 @@ import ufl
 from dolfinx.fem import Function, FunctionSpace, dirichletbc
 from dolfinx.fem.petsc import LinearProblem
 from dolfinx.io.utils import XDMFFile
-from dolfinx.mesh import CellType, create_unit_square
+from dolfinx.mesh import CellType, GhostMode, create_unit_square
 from ufl import (FacetNormal, FiniteElement, Identity, Measure, MixedElement,
                  grad, inner, split, sym, tr)
 
@@ -39,17 +54,25 @@ from mpi4py import MPI
 # use Nédélec elements and DG-type restrictions.
 
 mesh = create_unit_square(MPI.COMM_WORLD, 32, 32, CellType.triangle,
-                          dolfinx.cpp.mesh.GhostMode.shared_facet)
+                          GhostMode.shared_facet)
 
-# The Pechstein-Liberman element [1] for the Reissner-Mindlin plate problem
+# The Pechstein-Schöberl element of order $k$ for the Reissner-Mindlin plate problem
 # consists of:
 #
+# - $k$-th order vector-valued Nédélec elements of the second kind for the
+#   rotations $\theta \in \mathrm{NED}_k$ and,
+# - $k + 1$-th order scalar-valued Lagrange element for the transverse displacement field
+#   $w \in \mathrm{CG}_1$ and,
+# - $k$-th order Hellan-Herrmann-Johnson finite elements for the bending moments, which
+#   naturally discretise tensor-valued functions in $H(\mathrm{div}\;\mathrm{\bf{div}})$,
+#   $M \in \mathrm{HHJ}_k$.
 #
-# The final element definition is
+# The final element definition with $k = 1$ is:
 
 # +
-U_el = MixedElement([FiniteElement("N2curl", ufl.triangle, 1), FiniteElement("Lagrange", ufl.triangle, 2),
-                     FiniteElement("HHJ", ufl.triangle, 1)])
+k = 1
+U_el = MixedElement([FiniteElement("N2curl", ufl.triangle, k), FiniteElement("Lagrange", ufl.triangle, k + 1),
+                     FiniteElement("HHJ", ufl.triangle, k)])
 U = FunctionSpace(mesh, U_el)
 
 u = ufl.TrialFunction(U)
@@ -62,11 +85,45 @@ theta_t, w_t, M_t = split(u_t)
 # We assume constant material parameters; Young's modulus $E$, Poisson's ratio
 # $\nu$, shear-correction factor $\kappa$, and thickness $t$.
 
+# +
 E = 10920.0
 nu = 0.3
 kappa = 5.0/6.0
 t = 0.001
+# -
 
+# The overall weak form for the problem can be written as:
+#
+# Find $(\theta, w, M) \in \mathrm{NED}_k \times \mathrm{CG}_1 \times \mathrm{HHJ}_k$
+# such that
+#
+# $$
+# \left( k(M), \tilde{M} \right) + \left< \tilde{M}, \theta \right> + \left< M, \tilde{\theta} \right> - \left( \mu \gamma(\theta, w), \gamma(\tilde{\theta}, \tilde{w}) \right) \\ = -\left(t^3, \tilde{w} \right) \quad \forall (\theta, w, M) \in \mathrm{NED}_k \times \mathrm{CG}_1 \times \mathrm{HHJ}_k,
+# $$
+# where $\left( \cdot, \cdot \right)$ is the usual $L^2$ inner product on the
+# mesh $\Omega$, $\gamma(\theta, w) = \nabla w - \theta \in H(\mathrm{rot})$ is
+# the shear-strain, $\mu = E \kappa t/(2(1 + \nu))$ the shear modulus. $k(M)$
+# are the bending strains $k(\theta) = \mathrm{sym}(\nabla \theta)$ written in terms of
+# the bending moments (stresses)
+#
+# $$
+# k(M) = \frac{12}{E t^3} \left[ (1 + \nu) M - \nu \mathrm{tr}\left( M \right) I \right],
+# $$
+# with $\mathrm{tr}$ the trace operator and $I$ the identity tensor.
+#
+# The inner product $\left< \cdot, \cdot \right>$ is defined by
+#
+# $$
+# \left< M, \theta \right> = -\left( M, k(\theta) \right) + \int_{\partial K} M_{nn} \cdot [[ \theta ]]_n \; \mathrm{d}s,
+# $$
+# where $M_{nn} = \left(Mn \right) \cdot n$ is the normal-normal component of
+# the bending moment, $\partial K$ are the facets of the mesh, $[[ \theta ]]$ is
+# the jump in the normal component of the rotations on the facets (reducing to
+# simply $\theta \cdot n$ on the exterior facets).
+#
+# The above equations can be written relatively straightforwardly in UFL as:
+
+# +
 dx = Measure("dx", mesh)
 dS = Measure("dS", mesh)
 ds = Measure("ds", mesh)
@@ -91,6 +148,7 @@ def nn(M):
 
 
 def inner_divdiv(M, theta):
+    """Discrete div-div inner product"""
     n = FacetNormal(M.ufl_domain())
     M_nn = nn(M)
     result = -inner(M, k_theta(theta))*dx + inner(M_nn("+"), ufl.jump(theta, n))*dS + inner(M_nn, ufl.dot(theta, n))*ds
@@ -105,14 +163,20 @@ a = inner(k_M(M), M_t)*dx + inner_divdiv(M_t, theta) + inner_divdiv(M, theta_t) 
     ((E*kappa*t)/(2.0*(1.0 + nu)))*inner(gamma(theta, w), gamma(theta_t, w_t))*dx
 L = -inner(1.0*t**3, w_t)*dx
 
+# -
+
+# Imposition of boundary conditions requires some care. We reproduce the table
+# from Pechstein and Schöberl specifying the different types of boundary condition.
+#
+# | Essential | Natural | Non-homogeneous term |
+# | --------- | ------- | -------------------- |
+# | $w$       | $\mu(\partial_n w - \theta_n) = g_w$ | $\int_{\Gamma} g_w \tilde{w} \; \mathrm{d}s$ |
+
+# +
+
 
 def all_boundary(x):
     return np.full(x.shape[1], True, dtype=bool)
-
-
-def make_bc(value, V, on_boundary):
-    bc = dirichletbc(value, boundary_dofs, V)
-    return bc
 
 
 boundary_entities = dolfinx.mesh.locate_entities_boundary(
