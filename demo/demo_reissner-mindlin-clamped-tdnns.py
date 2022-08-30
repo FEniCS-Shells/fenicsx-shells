@@ -15,7 +15,7 @@
 # conditions using the TDNNS (tangential displacement normal-normal stress)
 # element developed in:
 #
-# Pechstein, A.S., Schöberl, J. The TDNNS method for Reissner–Mindlin plates.
+# Pechstein, A. S., Schöberl, J. The TDNNS method for Reissner–Mindlin plates.
 # Numer. Math. 137, 713–740 (2017).
 # [doi:10.1007/s00211-017-0883-9](https://doi.org/10.1007/s00211-017-0883-9)
 #
@@ -36,6 +36,7 @@
 # We begin by importing the necessary functionality from DOLFINx, UFL and
 # PETSc.
 
+# +
 import numpy as np
 
 import dolfinx
@@ -49,12 +50,17 @@ from ufl import (FacetNormal, FiniteElement, Identity, Measure, MixedElement,
 
 from mpi4py import MPI
 
+# -
+
 # We then create a two-dimensional mesh of the mid-plane of the plate $\Omega =
 # [0, 1] \times [0, 1]$. `GhostMode.shared_facet` is required as the Form will
 # use Nédélec elements and DG-type restrictions.
 
+# +
 mesh = create_unit_square(MPI.COMM_WORLD, 32, 32, CellType.triangle,
                           GhostMode.shared_facet)
+
+# -
 
 # The Pechstein-Schöberl element of order $k$ for the Reissner-Mindlin plate problem
 # consists of:
@@ -98,7 +104,10 @@ t = 0.001
 # such that
 #
 # $$
-# \left( k(M), \tilde{M} \right) + \left< \tilde{M}, \theta \right> + \left< M, \tilde{\theta} \right> - \left( \mu \gamma(\theta, w), \gamma(\tilde{\theta}, \tilde{w}) \right) \\ = -\left(t^3, \tilde{w} \right) \quad \forall (\theta, w, M) \in \mathrm{NED}_k \times \mathrm{CG}_1 \times \mathrm{HHJ}_k,
+# \left( k(M), \tilde{M} \right) + \left< \tilde{M}, \theta \right> + \left< M,
+# \tilde{\theta} \right> - \left( \mu \gamma(\theta, w), \gamma(\tilde{\theta},
+# \tilde{w}) \right) \\ = -\left(t^3, \tilde{w} \right) \quad \forall (\theta,
+# w, M) \in \mathrm{NED}_k \times \mathrm{CG}_1 \times \mathrm{HHJ}_k,
 # $$
 # where $\left( \cdot, \cdot \right)$ is the usual $L^2$ inner product on the
 # mesh $\Omega$, $\gamma(\theta, w) = \nabla w - \theta \in H(\mathrm{rot})$ is
@@ -114,7 +123,8 @@ t = 0.001
 # The inner product $\left< \cdot, \cdot \right>$ is defined by
 #
 # $$
-# \left< M, \theta \right> = -\left( M, k(\theta) \right) + \int_{\partial K} M_{nn} \cdot [[ \theta ]]_n \; \mathrm{d}s,
+# \left< M, \theta \right> = -\left( M, k(\theta) \right) + \int_{\partial K}
+# M_{nn} \cdot [[ \theta ]]_n \; \mathrm{d}s,
 # $$
 # where $M_{nn} = \left(Mn \right) \cdot n$ is the normal-normal component of
 # the bending moment, $\partial K$ are the facets of the mesh, $[[ \theta ]]$ is
@@ -170,7 +180,25 @@ L = -inner(1.0*t**3, w_t)*dx
 #
 # | Essential | Natural | Non-homogeneous term |
 # | --------- | ------- | -------------------- |
-# | $w$       | $\mu(\partial_n w - \theta_n) = g_w$ | $\int_{\Gamma} g_w \tilde{w} \; \mathrm{d}s$ |
+# | $w = \bar{w}$       | $\mu(\partial_n w - \theta_n) = g_w$ | $\int_{\Gamma} g_w \tilde{w} \; \mathrm{d}s$ |
+# | $\theta_\tau = \bar{\theta}_{\tau} $ | $m_{n\tau} = g_{\theta_\tau}$ | $\int_{\Gamma} g_{\theta_\tau} \cdot \tilde{\theta} \; \mathrm{d}s$ |
+# | $m_{nn} = \bar{m}_{nn}$      | $\theta_n = g_{\theta_n}$ | $\int_{\Gamma} g_{\theta_n} \tilde{m}_{nn} \; \mathrm{d}s$ |
+#
+# where $\theta_{n} = \theta_n$ is the normal component of the rotation,
+# $\theta_{\tau} = \theta \cdot \tau $ is the tangential component of the
+# rotation, $m_{n\tau} = m \cdot n - \sigma_{nn} n$ is the normal-tangential
+# component of $n$, and $g_{w}$ etc. are known natural boundary data and
+# $\bar{w}$ etc. are known essential boundary data.
+#
+# In the case of an essential boundary condition the values are enforced
+# directly in the finite element space using `dolfinx.dirichletbc`. In the case
+# of a homogeneous natural boundary condition the corresponding essential
+# boundary condition should be dropped. In the case of a non-homogeneous
+# condition an extra term must be added to the weak formulation.
+#
+# For a fully clamped plate we have on the entire boundary $\bar{w} = 0$ (homogeneous
+# essential), $\bar{\theta_\tau} = 0$ (homogeneous essential), and $g_{\theta_n} = 0$
+# (homogeneous natural).
 
 # +
 
@@ -196,6 +224,12 @@ boundary_dofs = dolfinx.fem.locate_dofs_topological(
 theta_bc = Function(R)
 bcs.append(dirichletbc(theta_bc, boundary_dofs, U.sub(0)))
 
+# -
+
+# Finally we solve the problem and output the transverse displacement at the
+# centre of the plate.
+
+# +
 problem = LinearProblem(a, L, bcs=bcs, petsc_options={
                         "ksp_type": "preonly", "pc_type": "lu", "pc_factor_mat_solver_type": "mumps"})
 u_h = problem.solve()
@@ -215,3 +249,5 @@ if len(cells) > 0:
 with XDMFFile(MPI.COMM_WORLD, "w.xdmf", "w") as f:
     f.write_mesh(mesh)
     f.write_function(w)
+
+# TODO: Output of m and theta using new interpolation functions?
