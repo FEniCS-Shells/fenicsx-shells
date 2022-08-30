@@ -166,6 +166,7 @@ def inner_divdiv(M, theta):
 
 
 def gamma(theta, w):
+    """Shear strain"""
     return grad(w) - theta
 
 
