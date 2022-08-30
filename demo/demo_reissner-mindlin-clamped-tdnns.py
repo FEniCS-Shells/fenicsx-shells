@@ -7,7 +7,6 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.14.1
 # ---
-# flake8: noqa E501
 
 # # Clamped Reissner-Mindlin plate under uniform load using TDNNS element
 #
@@ -202,6 +201,8 @@ L = -inner(1.0*t**3, w_t)*dx
 # $g_{\theta_n} = 0$ (homogeneous natural).
 
 # +
+
+
 def all_boundary(x):
     return np.full(x.shape[1], True, dtype=bool)
 
