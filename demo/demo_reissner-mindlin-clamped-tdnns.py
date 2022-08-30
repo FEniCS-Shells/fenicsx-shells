@@ -7,6 +7,7 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.14.1
 # ---
+# flake8: noqa E501
 
 # # Clamped Reissner-Mindlin plate under uniform load using TDNNS element
 #
@@ -57,7 +58,7 @@ from mpi4py import MPI
 # use Nédélec elements and DG-type restrictions.
 
 # +
-mesh = create_unit_square(MPI.COMM_WORLD, 32, 32, CellType.triangle,
+mesh = create_unit_square(MPI.COMM_WORLD, 16, 16, CellType.triangle,
                           GhostMode.shared_facet)
 
 # -
@@ -68,15 +69,15 @@ mesh = create_unit_square(MPI.COMM_WORLD, 32, 32, CellType.triangle,
 # - $k$-th order vector-valued Nédélec elements of the second kind for the
 #   rotations $\theta \in \mathrm{NED}_k$ and,
 # - $k + 1$-th order scalar-valued Lagrange element for the transverse displacement field
-#   $w \in \mathrm{CG}_1$ and,
+#   $w \in \mathrm{CG}_{k + 1}$ and,
 # - $k$-th order Hellan-Herrmann-Johnson finite elements for the bending moments, which
 #   naturally discretise tensor-valued functions in $H(\mathrm{div}\;\mathrm{\bf{div}})$,
 #   $M \in \mathrm{HHJ}_k$.
 #
-# The final element definition with $k = 1$ is:
+# The final element definition with $k = 3$ is:
 
 # +
-k = 1
+k = 3
 U_el = MixedElement([FiniteElement("N2curl", ufl.triangle, k), FiniteElement("Lagrange", ufl.triangle, k + 1),
                      FiniteElement("HHJ", ufl.triangle, k)])
 U = FunctionSpace(mesh, U_el)
@@ -178,11 +179,11 @@ L = -inner(1.0*t**3, w_t)*dx
 # Imposition of boundary conditions requires some care. We reproduce the table
 # from Pechstein and Schöberl specifying the different types of boundary condition.
 #
-# | Essential | Natural | Non-homogeneous term |
-# | --------- | ------- | -------------------- |
-# | $w = \bar{w}$       | $\mu(\partial_n w - \theta_n) = g_w$ | $\int_{\Gamma} g_w \tilde{w} \; \mathrm{d}s$ |
-# | $\theta_\tau = \bar{\theta}_{\tau} $ | $m_{n\tau} = g_{\theta_\tau}$ | $\int_{\Gamma} g_{\theta_\tau} \cdot \tilde{\theta} \; \mathrm{d}s$ |
-# | $m_{nn} = \bar{m}_{nn}$      | $\theta_n = g_{\theta_n}$ | $\int_{\Gamma} g_{\theta_n} \tilde{m}_{nn} \; \mathrm{d}s$ |
+# | Essential                            | Natural                              | Non-homogeneous term                                                |
+# | ------------------------------------ | ------------------------------------ | ------------------------------------------------------------------- |
+# | $w = \bar{w}$                        | $\mu(\partial_n w - \theta_n) = g_w$ | $\int_{\Gamma} g_w \tilde{w} \; \mathrm{d}s$                        |
+# | $\theta_\tau = \bar{\theta}_{\tau} $ | $m_{n\tau} = g_{\theta_\tau}$        | $\int_{\Gamma} g_{\theta_\tau} \cdot \tilde{\theta} \; \mathrm{d}s$ |
+# | $m_{nn} = \bar{m}_{nn}$              | $\theta_n = g_{\theta_n}$            | $\int_{\Gamma} g_{\theta_n} \tilde{m}_{nn} \; \mathrm{d}s$          |
 #
 # where $\theta_{n} = \theta_n$ is the normal component of the rotation,
 # $\theta_{\tau} = \theta \cdot \tau $ is the tangential component of the
@@ -196,13 +197,11 @@ L = -inner(1.0*t**3, w_t)*dx
 # boundary condition should be dropped. In the case of a non-homogeneous
 # condition an extra term must be added to the weak formulation.
 #
-# For a fully clamped plate we have on the entire boundary $\bar{w} = 0$ (homogeneous
-# essential), $\bar{\theta_\tau} = 0$ (homogeneous essential), and $g_{\theta_n} = 0$
-# (homogeneous natural).
+# For a fully clamped plate we have on the entire boundary $\bar{w} = 0$
+# (homogeneous essential), $\bar{\theta_\tau} = 0$ (homogeneous essential), and
+# $g_{\theta_n} = 0$ (homogeneous natural).
 
 # +
-
-
 def all_boundary(x):
     return np.full(x.shape[1], True, dtype=bool)
 
