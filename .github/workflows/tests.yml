@@ -10,13 +10,14 @@ on:
     branches:
       - main
 
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
     container: dolfinx/dolfinx:v0.5.0
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       
       - name: Flake8 checks
         run: |
@@ -43,11 +44,38 @@ jobs:
         run: |
           python3 -m pytest demo
       
-      - name: Upload Python documentation artifact
-        uses: actions/upload-artifact@v2
+      - name: Create documentation artifact
+        run: |
+          tar \
+          --dereference --hard-dereference \
+          --directory doc/build/html \
+          -cvf artifact.tar \
+          --exclude=.git \
+          --exclude=.github \
+          .
+      
+      - name: Upload documentation artifact
+        uses: actions/upload-artifact@v3
         with:
-          name: doc
-          path: |
-            doc/build/html/
-          retention-days: 2
-          if-no-files-found: error
+          name: github-pages
+          path: artifact.tar
+          retention-days: 1
+
+  deploy:
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main'
+    # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+    permissions:
+      contents: read
+      pages: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Pages
+        uses: actions/configure-pages@v2
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1
