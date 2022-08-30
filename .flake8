@@ -1,4 +1,0 @@
-[flake8]
-per-file-ignores =
-    # line too long
-    demo/demo_reissner-mindlin-clamped-tdnns.py: E501,
