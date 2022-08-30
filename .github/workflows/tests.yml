@@ -48,7 +48,7 @@ jobs:
         uses: actions/upload-pages-artifact@v1.0.3
         with:
           path: |
-            doc/build/html
+            'doc/build/html'
 
   deploy:
     needs: build-and-test
