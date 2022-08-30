@@ -44,10 +44,22 @@ jobs:
         run: |
           python3 -m pytest demo
       
-      - name: Upload Python documentation artifact
-        uses: actions/upload-pages-artifact@v1.0.3
+      - name: Create documentation artifact
+        run: |
+          tar \
+          --dereference --hard-dereference \
+          --directory doc/build/html \
+          -cvf artifact.tar \
+          --exclude=.git \
+          --exclude=.github \
+          .
+      
+      - name: Upload documentation artifact
+        uses: actions/upload-artifact@v3
         with:
-          path: 'doc/build/html'
+          name: github-pages
+          path: artifact.tar
+          retention-days: 1
 
   deploy:
     needs: build-and-test
