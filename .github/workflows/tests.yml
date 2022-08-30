@@ -10,16 +10,6 @@ on:
     branches:
       - main
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-# Allow one concurrent deployment
-concurrency:
-  group: "pages"
-  cancel-in-progress: true
 
 jobs:
   build-and-test:
@@ -55,20 +45,24 @@ jobs:
           python3 -m pytest demo
       
       - name: Upload Python documentation artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-pages-artifact@v1.0.3
         with:
-          name: doc
           path: |
-            doc/build/html/
-          retention-days: 2
-          if-no-files-found: error
+            doc/build/html
 
+  deploy:
+    needs: build-and-test
+    # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+    permissions:
+      contents: read
+      pages: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
       - name: Setup Pages
         uses: actions/configure-pages@v2
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v1
-        with:
-          path: doc/build/html
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v1
