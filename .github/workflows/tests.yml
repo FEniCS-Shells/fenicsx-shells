@@ -3,8 +3,12 @@ on:
   push:
     branches: [ main ]
 
-    schedule:
-      - cron: '0 0 * * 1'
+  schedule:
+    - cron: '0 0 * * 1'
+  
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build-and-test:
@@ -17,7 +21,7 @@ jobs:
       - name: Flake8 checks
         run: |
           python3 -m flake8 fenicsx_shells
-          python3 -m flake8 demo
+          cd demo && python3 -m flake8 . && cd ../
           python3 -m flake8 test
       - name: isort checks (non-blocking)
         continue-on-error: true
