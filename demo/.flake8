@@ -2,3 +2,5 @@
 per-file-ignores =
     # line too long
     demo_reissner-mindlin-clamped-tdnns.py: E501,
+    demo_reissner-mindlin-clamped.py: E501,
+    demo_reissner-mindlin-simply-supported.py: E501,
