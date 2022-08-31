@@ -24,7 +24,7 @@ Computers & Structures, 209, 163-181,
 
 ## Documentation
 
-Documentation can be viewed at https://fenics-shells.github.io/fenicsx-shells
+The documentation can be viewed [here](https://fenics-shells.github.io/fenicsx-shells).
 
 ## Features
 
@@ -67,7 +67,7 @@ along with the appropriate general [FEniCS citations](http://fenicsproject.org/c
 Jack S. Hale, University of Luxembourg, Luxembourg.
 
 FEniCSx-Shells contains code from the original FEniCS-Shells project
-hosted at https://bitbucket.org/unilucompmech/fenics-shells.
+hosted on [BitBucket](https://bitbucket.org/unilucompmech/fenics-shells).
 
 ## Contributing
 
@@ -82,7 +82,7 @@ Please use the GitHub issue tracker to report any issues.
 
 ## License
 
-FEniCS-Shellsx is free software: you can redistribute it and/or
+FEniCSx-Shells is free software: you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public License as published
 by the Free Software Foundation, either version 3 of the License, or (at your
 option) any later version.
@@ -93,4 +93,4 @@ PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
 details.
 
 You should have received a copy of the GNU Lesser General Public License along
-with fenics-shells.  If not, see http://www.gnu.org/licenses/.
+with FEniCSx-Shells.  If not, see http://www.gnu.org/licenses/.
