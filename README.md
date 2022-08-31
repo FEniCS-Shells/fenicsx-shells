@@ -12,8 +12,8 @@ numerical methods for solving a wide range of thin structural models (beams,
 plates and shells) expressed in the Unified Form Language (UFL) of the FEniCS
 Project.
 
-*FEniCSx-Shells is an experimental version targeting the new [FEniCSx
-environment](https://github.com/fenics/dolfinx).*
+*FEniCSx-Shells is an experimental version targeting version v0.5.0 of the new
+[DOLFINx solver](https://github.com/fenics/dolfinx).*
 
 The foundational aspects of the FEniCS-Shells project are described in the paper:
 
@@ -47,17 +47,17 @@ repository useful.
 
 ```
 @article{hale_simple_2018,
-title = {Simple and extensible plate and shell finite element models through automatic code generation tools},
-volume = {209},
-issn = {0045-7949},
-url = {http://www.sciencedirect.com/science/article/pii/S0045794918306126},
-doi = {10.1016/j.compstruc.2018.08.001},
-journal = {Computers \& Structures},
-author = {Hale, Jack S. and Brunetti, Matteo and Bordas, StÃ©phane P. A. and Maurini, Corrado},
-month = oct,
-year = {2018},
-keywords = {Domain specific language, FEniCS, Finite element methods, Plates, Shells, Thin structures},
-pages = {163--181},
+	title = {Simple and extensible plate and shell finite element models through automatic code generation tools},
+	volume = {209},
+	issn = {0045-7949},
+	url = {http://www.sciencedirect.com/science/article/pii/S0045794918306126},
+	doi = {10.1016/j.compstruc.2018.08.001},
+	journal = {Computers \& Structures},
+	author = {Hale, Jack S. and Brunetti, Matteo and Bordas, StÃ©phane P. A. and Maurini, Corrado},
+	month = oct,
+	year = {2018},
+	keywords = {Domain specific language, FEniCS, Finite element methods, Plates, Shells, Thin structures},
+	pages = {163--181},
 }
 ```
 along with the appropriate general [FEniCS citations](http://fenicsproject.org/citing).
@@ -66,7 +66,7 @@ along with the appropriate general [FEniCS citations](http://fenicsproject.org/c
 
 Jack S. Hale, University of Luxembourg, Luxembourg.
 
-FEniCS-Shellsx contains code from the original FEniCS-Shells project
+FEniCSx-Shells contains code from the original FEniCS-Shells project
 hosted at https://bitbucket.org/unilucompmech/fenics-shells.
 
 ## Contributing
