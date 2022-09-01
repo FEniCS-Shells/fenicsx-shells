@@ -79,7 +79,7 @@ w_t, M_t = ufl.TestFunctions(U)
 # +
 E = 10920.0
 nu = 0.3
-t = 1.0
+t = 0.001
 
 # -
 
@@ -167,9 +167,9 @@ def inner_divdiv(M, theta):
     return result
 
 
-a = inner(M, M_t)*dx + inner_divdiv(M_t, theta(w)) + \
+a = inner(k_M(M), M_t)*dx + inner_divdiv(M_t, theta(w)) + \
     inner_divdiv(M, theta(w_t))
-L = -inner(1.0, w_t)*dx
+L = -inner(t**3, w_t)*dx
 
 
 def all_boundary(x):
