@@ -174,7 +174,16 @@ L = -inner(t**3, w_t)*dx
 def all_boundary(x):
     return np.full(x.shape[1], True, dtype=bool)
 
+# -
 
+# We apply clamped boundary conditions on the entire boundary. The essential
+# boundary condition $w = 0$ is enforced directly in the finite element space,
+# while the condition $\nabla w \cdot n = 0$ is a natural condition that is
+# satisfied when the corresponding essential condition on $m_{nn}$ is dropped.
+
+# TODO: Add table like TDNNS example.
+
+# +
 boundary_entities = dolfinx.mesh.locate_entities_boundary(
     mesh, mesh.topology.dim - 1, all_boundary)
 
@@ -207,3 +216,5 @@ w, M = u_h.split()
 if len(cells) > 0:
     value = w.eval(point, cells[0])
     print(value[0])
+
+# TODO: IO?
