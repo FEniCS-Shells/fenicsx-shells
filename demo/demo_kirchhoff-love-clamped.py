@@ -35,12 +35,11 @@ import numpy as np
 
 import dolfinx
 import ufl
-from dolfinx.fem import Function, FunctionSpace, dirichletbc
+from dolfinx.fem import FunctionSpace, dirichletbc
 from dolfinx.fem.petsc import LinearProblem
-from dolfinx.io.utils import XDMFFile
-from dolfinx.mesh import CellType, create_unit_square
+from dolfinx.mesh import create_unit_square, CellType
 from ufl import (FacetNormal, FiniteElement, Identity, Measure, MixedElement,
-                 VectorElement, grad, inner, split, sym, tr)
+                 grad, inner, sym, tr)
 
 from mpi4py import MPI
 
@@ -49,7 +48,7 @@ from mpi4py import MPI
 # use Nédélec elements and DG-type restrictions.
 
 mesh = create_unit_square(MPI.COMM_WORLD, 16, 16, CellType.triangle,
-                          dolfinx.cpp.mesh.GhostMode.shared_facet)
+                          dolfinx.mesh.GhostMode.shared_facet)
 
 # The Hellen-Herrmann-Johnson element for the Kirchhoff-Love plate problem
 # consists of:
@@ -183,7 +182,8 @@ bcs = []
 # Transverse displacement
 boundary_dofs_displacement = dolfinx.fem.locate_dofs_topological(
     U.sub(0), mesh.topology.dim - 1, boundary_entities)
-bcs.append(dirichletbc(np.array(0.0, dtype=np.float64), boundary_dofs_displacement, U.sub(0)))
+bcs.append(dirichletbc(np.array(0.0, dtype=np.float64),
+           boundary_dofs_displacement, U.sub(0)))
 
 
 # -
