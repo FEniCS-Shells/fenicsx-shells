@@ -29,3 +29,11 @@ reduction operator to cure shear-locking:
 
     demo/demo_reissner-mindlin-simply-supported.md
 
+Clamped linear Kirchhoff-Love plate problem using the Hellan-Herrmann-Johnson
+finite element.
+
+.. toctree::
+    :titlesonly:
+    :maxdepth: 1
+
+    demo/demo_kirchhoff-love-clamped.md

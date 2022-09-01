@@ -44,7 +44,7 @@ from mpi4py import MPI
 # [0, 1] \times [0, 1]$. `GhostMode.shared_facet` is required as the Form will
 # use Nédélec elements and DG-type restrictions.
 
-mesh = create_unit_square(MPI.COMM_WORLD, 256, 256, CellType.triangle,
+mesh = create_unit_square(MPI.COMM_WORLD, 32, 32, CellType.triangle,
                           dolfinx.cpp.mesh.GhostMode.shared_facet)
 
 # The Durán-Liberman element [1] for the Reissner-Mindlin plate problem
