@@ -63,7 +63,7 @@ mesh = create_unit_square(MPI.COMM_WORLD, 16, 16, CellType.triangle,
 # The final element definition is
 
 # +
-k = 1
+k = 2
 U_el = MixedElement([FiniteElement("Lagrange", ufl.triangle, k + 1),
                      FiniteElement("HHJ", ufl.triangle, k)])
 U = FunctionSpace(mesh, U_el)
@@ -153,7 +153,7 @@ def k_M(M):
 def nn(M):
     """Normal-normal component of tensor"""
     n = FacetNormal(M.ufl_domain())
-    M_n = M*n
+    M_n = ufl.dot(M, n)
     M_nn = ufl.dot(M_n, n)
     return M_nn
 
@@ -167,7 +167,7 @@ def inner_divdiv(M, theta):
     return result
 
 
-a = inner(k_M(M), M_t)*dx + inner_divdiv(M_t, theta(w)) + \
+a = inner(M, M_t)*dx + inner_divdiv(M_t, theta(w)) + \
     inner_divdiv(M, theta(w_t))
 L = -inner(1.0, w_t)*dx
 
@@ -181,9 +181,10 @@ boundary_entities = dolfinx.mesh.locate_entities_boundary(
 
 bcs = []
 # Transverse displacement
-boundary_dofs = dolfinx.fem.locate_dofs_topological(
+boundary_dofs_displacement = dolfinx.fem.locate_dofs_topological(
     U.sub(0), mesh.topology.dim - 1, boundary_entities)
-bcs.append(dirichletbc(np.array(0.0, dtype=np.float64), boundary_dofs, U.sub(0)))
+bcs.append(dirichletbc(np.array(0.0, dtype=np.float64), boundary_dofs_displacement, U.sub(0)))
+
 
 # -
 
@@ -192,7 +193,7 @@ bcs.append(dirichletbc(np.array(0.0, dtype=np.float64), boundary_dofs, U.sub(0))
 
 # +
 problem = LinearProblem(a, L, bcs=bcs, petsc_options={
-                        "ksp_type": "preonly", "pc_type": "lu", "pc_factor_mat_solver_type": "mumps"})
+                        "ksp_type": "preonly", "pc_type": "lu", "pc_factor_mat_solver_type": "mumps", "ksp_view": ""})
 u_h = problem.solve()
 
 bb_tree = dolfinx.geometry.BoundingBoxTree(mesh, 2)
