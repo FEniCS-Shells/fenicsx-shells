@@ -28,6 +28,10 @@
 # Elements, SIAM Journal on Numerical Analysis 58:5, 2829-2855 (2020),
 # [doi:10.1137/19M1288723](https://doi.org/10.1137/19M1288723).
 #
+# We remark that this model can be recovered formally from the Reissner-Mindlin
+# models by taking the limit in the thickness $t \to 0$ and setting $\theta =
+# \grad w$.
+#
 # We begin by importing the necessary functionality from DOLFINx, UFL and
 # PETSc.
 
@@ -173,6 +177,7 @@ L = -inner(t**3, w_t)*dx
 
 def all_boundary(x):
     return np.full(x.shape[1], True, dtype=bool)
+
 
 # -
 
