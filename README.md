@@ -31,6 +31,7 @@ The documentation can be viewed [here](https://fenics-shells.github.io/fenicsx-s
 FEniCSx-Shells currently includes implementations of the following structural models:
 
 * Reissner-Mindlin plates.
+* Kirchhoff-Love plates.
 
 A roadmap for future developments will be shared soon.
 
@@ -39,6 +40,7 @@ including:
 
 * Mixed Interpolation of Tensorial Component (MITC) reduction operators.
 * Tangential Displacement Normal-Normal Derivative (TDNNS) methods.
+* Hellman-Herrmann-Johnson (HHJ) finite elements.
 
 ## Citing
 
