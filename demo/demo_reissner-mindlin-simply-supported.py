@@ -236,7 +236,7 @@ u_ = problem.solve()
 bb_tree = dolfinx.geometry.BoundingBoxTree(mesh, 2)
 point = np.array([0.5, 0.5, 0.0], dtype=np.float64)
 cell_candidates = dolfinx.geometry.compute_collisions(bb_tree, point)
-cells = dolfinx.cpp.geometry.compute_colliding_cells(
+cells = dolfinx.geometry.compute_colliding_cells(
     mesh, cell_candidates, point)
 
 theta, w, R_gamma, p = u_.split()
