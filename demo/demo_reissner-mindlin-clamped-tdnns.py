@@ -43,8 +43,7 @@ import dolfinx
 import ufl
 from dolfinx.fem import Function, FunctionSpace, dirichletbc
 from dolfinx.fem.petsc import LinearProblem
-from dolfinx.io.utils import XDMFFile
-from dolfinx.mesh import CellType, GhostMode, create_unit_square
+from dolfinx.mesh import CellType, create_unit_square
 from ufl import (FacetNormal, FiniteElement, Identity, Measure, MixedElement,
                  grad, inner, split, sym, tr)
 
@@ -159,7 +158,8 @@ def inner_divdiv(M, theta):
     """Discrete div-div inner product"""
     n = FacetNormal(M.ufl_domain())
     M_nn = nn(M)
-    result = -inner(M, k_theta(theta))*dx + inner(M_nn("+"), ufl.jump(theta, n))*dS + inner(M_nn, ufl.dot(theta, n))*ds
+    result = -inner(M, k_theta(theta))*dx + inner(M_nn("+"),
+                                                  ufl.jump(theta, n))*dS + inner(M_nn, ufl.dot(theta, n))*ds
     return result
 
 
@@ -177,11 +177,11 @@ L = -inner(1.0*t**3, w_t)*dx
 # Imposition of boundary conditions requires some care. We reproduce the table
 # from Pechstein and Schöberl specifying the different types of boundary condition.
 #
-# | Essential                            | Natural                              | Non-homogeneous term                                                |
-# | ------------------------------------ | ------------------------------------ | ------------------------------------------------------------------- |
-# | $w = \bar{w}$                        | $\mu(\partial_n w - \theta_n) = g_w$ | $\int_{\Gamma} g_w \tilde{w} \; \mathrm{d}s$                        |
-# | $\theta_\tau = \bar{\theta}_{\tau} $ | $m_{n\tau} = g_{\theta_\tau}$        | $\int_{\Gamma} g_{\theta_\tau} \cdot \tilde{\theta} \; \mathrm{d}s$ |
-# | $m_{nn} = \bar{m}_{nn}$              | $\theta_n = g_{\theta_n}$            | $\int_{\Gamma} g_{\theta_n} \tilde{m}_{nn} \; \mathrm{d}s$          |
+# | Essential                            | Natural                              | Non-homogeneous term                                                |  # noqa: E501
+# | ------------------------------------ | ------------------------------------ | ------------------------------------------------------------------- |  # noqa: E501
+# | $w = \bar{w}$                        | $\mu(\partial_n w - \theta_n) = g_w$ | $\int_{\Gamma} g_w \tilde{w} \; \mathrm{d}s$                        |  # noqa: E501
+# | $\theta_\tau = \bar{\theta}_{\tau} $ | $m_{n\tau} = g_{\theta_\tau}$        | $\int_{\Gamma} g_{\theta_\tau} \cdot \tilde{\theta} \; \mathrm{d}s$ |  # noqa: E501
+# | $m_{nn} = \bar{m}_{nn}$              | $\theta_n = g_{\theta_n}$            | $\int_{\Gamma} g_{\theta_n} \tilde{m}_{nn} \; \mathrm{d}s$          |  # noqa: E501
 #
 # where $\theta_{n} = \theta_n$ is the normal component of the rotation,
 # $\theta_{\tau} = \theta \cdot \tau $ is the tangential component of the

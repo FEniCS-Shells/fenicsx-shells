@@ -33,7 +33,6 @@ import dolfinx
 import ufl
 from dolfinx.fem import Function, FunctionSpace, dirichletbc
 from dolfinx.fem.petsc import LinearProblem
-from dolfinx.io.utils import XDMFFile
 from dolfinx.mesh import CellType, create_unit_square
 from ufl import (FiniteElement, MixedElement, VectorElement, dx, grad, inner,
                  split, sym, tr)

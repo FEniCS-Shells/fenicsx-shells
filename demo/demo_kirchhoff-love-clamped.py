@@ -41,7 +41,7 @@ import dolfinx
 import ufl
 from dolfinx.fem import FunctionSpace, dirichletbc
 from dolfinx.fem.petsc import LinearProblem
-from dolfinx.mesh import create_unit_square, CellType
+from dolfinx.mesh import CellType, create_unit_square
 from ufl import (FacetNormal, FiniteElement, Identity, Measure, MixedElement,
                  grad, inner, sym, tr)
 
