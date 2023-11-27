@@ -33,6 +33,7 @@ jobs:
       
       - name: Install FEniCSx-Shells
         run: |
+          pip install scikit-build-core[pyproject] # TO REMOVE ONCE 0.8.0 RELEASED
           python3 -m pip install --no-build-isolation --check-build-dependencies .
 
       - name: Build documentation
