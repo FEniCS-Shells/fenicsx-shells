@@ -14,5 +14,5 @@ authors = [
       { name = "Jack S. Hale" },
 ]
 dependencies = [
-      "fenics-dolfinx>=0.7.2,<0.9.0",
+      "fenics-dolfinx>=0.7.2,<0.8.0",
 ]
