@@ -1,3 +1,18 @@
 [build-system]
-requires = ["setuptools>=42", "wheel", "pybind11", "cmake"]
-build-backend = "setuptools.build_meta"
+requires = ["scikit-build-core[pyproject]", "wheel", "pybind11"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "fenicsx-shells"
+version = "0.1.0.dev0"
+description = "FEniCSx-Shells"
+readme = "README.md"
+requires-python = ">=3.8.0"
+license = { file = "COPYING.LESSER" }
+authors = [
+      { email = "jack.hale@uni.lu" },
+      { name = "Jack S. Hale" },
+]
+dependencies = [
+      "fenics-dolfinx>=0.7.2,<0.9.0",
+]
