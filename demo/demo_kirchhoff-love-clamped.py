@@ -41,18 +41,16 @@ import dolfinx
 import ufl
 from dolfinx.fem import FunctionSpace, dirichletbc
 from dolfinx.fem.petsc import LinearProblem
-from dolfinx.mesh import create_unit_square, CellType
+from dolfinx.mesh import CellType, create_unit_square
 from ufl import (FacetNormal, FiniteElement, Identity, Measure, MixedElement,
                  grad, inner, sym, tr)
 
 from mpi4py import MPI
 
 # We then create a two-dimensional mesh of the mid-plane of the plate $\Omega =
-# [0, 1] \times [0, 1]$. `GhostMode.shared_facet` is required as the Form will
-# use Nédélec elements and DG-type restrictions.
+# [0, 1] \times [0, 1]$.
 
-mesh = create_unit_square(MPI.COMM_WORLD, 16, 16, CellType.triangle,
-                          dolfinx.mesh.GhostMode.shared_facet)
+mesh = create_unit_square(MPI.COMM_WORLD, 16, 16, CellType.triangle)
 
 # The Hellen-Herrmann-Johnson element for the Kirchhoff-Love plate problem
 # consists of:
@@ -207,19 +205,19 @@ bcs.append(dirichletbc(np.array(0.0, dtype=np.float64),
 
 # +
 problem = LinearProblem(a, L, bcs=bcs, petsc_options={
-                        "ksp_type": "preonly", "pc_type": "lu", "pc_factor_mat_solver_type": "mumps", "ksp_view": ""})
+                        "ksp_type": "preonly", "pc_type": "lu", "pc_factor_mat_solver_type": "mumps"})
 u_h = problem.solve()
 
-bb_tree = dolfinx.geometry.BoundingBoxTree(mesh, 2)
-point = np.array([0.5, 0.5, 0.0], dtype=np.float64)
-cell_candidates = dolfinx.geometry.compute_collisions(bb_tree, point)
+bb_tree = dolfinx.geometry.bb_tree(mesh, 2)
+point = np.array([[0.5, 0.5, 0.0]], dtype=np.float64)
+cell_candidates = dolfinx.geometry.compute_collisions_points(bb_tree, point)
 cells = dolfinx.geometry.compute_colliding_cells(
     mesh, cell_candidates, point)
 
 w, M = u_h.split()
 
 if len(cells) > 0:
-    value = w.eval(point, cells[0])
+    value = w.eval(point, cells.array[0])
     print(value[0])
 
 # TODO: IO?

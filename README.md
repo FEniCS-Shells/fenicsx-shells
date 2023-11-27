@@ -12,7 +12,7 @@ numerical methods for solving a wide range of thin structural models (beams,
 plates and shells) expressed in the Unified Form Language (UFL) of the FEniCS
 Project.
 
-*FEniCSx-Shells is an experimental version targeting version v0.5.0 of the new
+*FEniCSx-Shells is an experimental version targeting version v0.7.2 of the new
 [DOLFINx solver](https://github.com/fenics/dolfinx).*
 
 The foundational aspects of the FEniCS-Shells project are described in the paper:

@@ -44,8 +44,7 @@ from mpi4py import MPI
 # [0, 1] \times [0, 1]$. `GhostMode.shared_facet` is required as the Form will
 # use Nédélec elements and DG-type restrictions.
 
-mesh = create_unit_square(MPI.COMM_WORLD, 32, 32, CellType.triangle,
-                          dolfinx.cpp.mesh.GhostMode.shared_facet)
+mesh = create_unit_square(MPI.COMM_WORLD, 32, 32, CellType.triangle)
 
 # The Durán-Liberman element [1] for the Reissner-Mindlin plate problem
 # consists of:
@@ -217,16 +216,16 @@ problem = LinearProblem(J, -F, bcs=bcs, petsc_options={
                         "ksp_type": "preonly", "pc_type": "lu", "pc_factor_mat_solver_type": "mumps"})
 u_ = problem.solve()
 
-bb_tree = dolfinx.geometry.BoundingBoxTree(mesh, 2)
-point = np.array([0.5, 0.5, 0.0], dtype=np.float64)
-cell_candidates = dolfinx.geometry.compute_collisions(bb_tree, point)
+bb_tree = dolfinx.geometry.bb_tree(mesh, 2)
+point = np.array([[0.5, 0.5, 0.0]], dtype=np.float64)
+cell_candidates = dolfinx.geometry.compute_collisions_points(bb_tree, point)
 cells = dolfinx.geometry.compute_colliding_cells(
     mesh, cell_candidates, point)
 
 theta, w, R_gamma, p = u_.split()
 
 if len(cells) > 0:
-    value = w.eval(point, cells[0])
+    value = w.eval(point, cells.array[0])
     print(value[0])
     # NOTE: FEniCS-Shells (old dolfin) `demo/documented/reissner-mindlin-clamped`
     # gives 1.28506469462e-06 on a 32 x 32 mesh and 1.2703580973e-06 on a 64 x 64
@@ -239,9 +238,6 @@ with XDMFFile(MPI.COMM_WORLD, "w.xdmf", "w") as f:
     f.write_mesh(mesh)
     f.write_function(w)
 
-with XDMFFile(MPI.COMM_WORLD, "theta.xdmf", "w") as f:
-    f.write_mesh(mesh)
-    f.write_function(theta)
 # -
 
 # ## Appendix
