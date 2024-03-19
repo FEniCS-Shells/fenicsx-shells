@@ -25,18 +25,9 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-#
-# %% [markdown]
-# For plotting the mesh, we also import `pyvista`
-#
-# %%
-import pyvista
-
-#
 # %%
 import dolfinx
 import ufl
-from dolfinx import plot
 from dolfinx.fem import (Expression, Function, FunctionSpace, dirichletbc,
                          locate_dofs_topological)
 from dolfinx.fem.bcs import DirichletBC
@@ -88,26 +79,7 @@ mesh = create_rectangle(MPI.COMM_WORLD, np.array([[-np.pi / 2, 0], [np.pi / 2, L
 #
 # topology dimension = 2
 tdim = mesh.topology.dim
-#
-# %% [markdown]
-# Plot the mesh with `pyvista`
-#
-# %%
-#
-results_folder = Path("results/nonlinear_Naghdi/semi_cylinder")
-results_folder.mkdir(exist_ok=True, parents=True)
-#
-pyvista.start_xvfb()
-#
-topology, cell_types, geometry = plot.vtk_mesh(mesh, tdim)
-grid = pyvista.UnstructuredGrid(topology, cell_types, geometry)
-#
-plotter = pyvista.Plotter(off_screen=True)
-plotter.add_mesh(grid, show_edges=True)
-plotter.show_grid()
-plotter.view_xy()
-figure = plotter.screenshot(results_folder/f"mesh_rank{mesh.comm.rank}.png")
-plotter.close()
+
 # %% [markdown]
 # We provide the analytical expression of the initial shape as a `ufl` expression
 #
@@ -131,41 +103,6 @@ def unit_normal(phi):
 
 
 n0_ufl = unit_normal(phi0_ufl)
-#
-# %% [markdown]
-# We plot the initial shape and the unit normal by interpolating them in the 1st order Lagrange Finite Element space
-#
-# %%
-# create a FEM interpolation of n0 and phi0
-P1_d3_FS = FunctionSpace(mesh, VectorElement("Lagrange", ufl.triangle, degree=1, dim=3))
-#
-n0_P1_expr = Expression(n0_ufl, P1_d3_FS.element.interpolation_points())
-n0_P1_func = Function(P1_d3_FS)
-n0_P1_func.interpolate(n0_P1_expr)
-#
-phi0_P1_expr = Expression(phi0_ufl, P1_d3_FS.element.interpolation_points())
-phi0_P1_func = Function(P1_d3_FS)
-phi0_P1_func.interpolate(phi0_P1_expr)
-#
-# %%
-topology, cell_types, geometry = plot.vtk_mesh(P1_d3_FS)
-#
-geometry_phi0_P1 = phi0_P1_func.x.array.reshape((geometry.shape[0], len(phi0_P1_func)))
-geometry_n0_P1 = n0_P1_func.x.array.reshape((geometry.shape[0], len(n0_P1_func)))
-#
-grid_phi0_P1 = pyvista.UnstructuredGrid(topology, cell_types, geometry_phi0_P1)
-grid_phi0_P1["n0"] = geometry_n0_P1
-glyphs = grid_phi0_P1.glyph(orient="n0", factor=0.2)
-#
-#
-plotter = pyvista.Plotter(off_screen=True)
-plotter.add_mesh(grid_phi0_P1, style="wireframe", color="k")
-plotter.add_mesh(glyphs, show_scalar_bar=True, scalar_bar_args={"vertical": True})
-plotter.show_grid()
-plotter.enable_parallel_projection()
-figure = plotter.screenshot(results_folder/f"initial_shape_rank{mesh.comm.rank}.png")
-plotter.close()
-#
 # %% [markdown]
 # We define a local orthonormal frame $\{\vec{t}_{01}, \vec{t}_{02}, \vec{n}\}$ of the initial configuration $\phi_0$
 # by rotating the global Cartesian basis $\vec{e}_i$ with a rotation matrix $\mathbf{R}_0$:
@@ -734,6 +671,8 @@ phi_func.interpolate(phi_expr)
 u_P2 = Function(phi_FS)
 u_P2.interpolate(u_P2B3)
 
+results_folder = Path("results/nonlinear_Naghdi/semi_cylinder")
+results_folder.mkdir(exist_ok=True, parents=True)
 
 with dolfinx.io.VTXWriter(mesh.comm, results_folder/"u_naghdi.bp", [u_P2]) as vtx:
     vtx.write(0)
@@ -766,24 +705,6 @@ if mesh.comm.rank == 0:
     plt.legend()
     plt.grid()
     plt.savefig(results_folder/"comparisons.png")
-
-# %% [markdown]
-# The deformed shape $\vec{\phi}$ can also be plotted with `pyvista`
-
-# %%
-topology, cell_types, geometry = plot.vtk_mesh(phi_FS)
-
-geometry_phi = phi_func.x.array.reshape((geometry.shape[0], len(phi_func)))
-
-grid_phi = pyvista.UnstructuredGrid(topology, cell_types, geometry_phi)
-
-plotter = pyvista.Plotter(off_screen=True)
-plotter.add_mesh(grid_phi, show_edges=True)
-plotter.show_grid()
-plotter.enable_parallel_projection()
-plotter.show_axes_all()
-figure = plotter.screenshot(results_folder/f"phi_rank{mesh.comm.rank}.png")
-plotter.close()
 # %% [markdown]
 # # References
 #
