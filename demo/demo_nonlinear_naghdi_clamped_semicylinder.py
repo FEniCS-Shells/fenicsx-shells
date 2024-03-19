@@ -386,7 +386,7 @@ T = ufl.as_tensor( (t * mu *5.0 / 6.0) * a0_contra_ufl[i, j] * gamma(F, d)[j], [
 # \psi_s = \frac{1}{2} \vec{T} \cdot \vec{\gamma}
 # $$
 # 
-# They are per unit surface in the initial configuration):
+# They are per unit surface in the initial configuration:
 
 # %%
 psi_m = 0.5*inner(N, epsilon(F))
