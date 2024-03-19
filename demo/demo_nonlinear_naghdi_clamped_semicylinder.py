@@ -1,7 +1,7 @@
 # %% [markdown]
 # # Clamped semi-cylindrical Naghdi shell under point load
 #
-# author: Tian Yang
+# Modified by: Tian Yang
 #
 # %% [markdown]
 # This demo program solves the nonlinear Naghdi shell equations for a semi-cylindrical shell loaded by a point force.
@@ -37,13 +37,9 @@ from dolfinx.fem.petsc import (NonlinearProblem, apply_lifting,
 from dolfinx.mesh import CellType, create_rectangle, locate_entities_boundary
 from dolfinx.nls.petsc import NewtonSolver
 from ufl import FiniteElement, MixedElement, VectorElement, grad, inner, split
-
-#
 # %%
 from mpi4py import MPI
 from petsc4py import PETSc
-
-#
 # %% [markdown]
 # We consider a semi-cylindrical shell of radius $r$ and axis length $L$. The shell is made of a linear elastic
 # isotropic homogeneous
@@ -76,7 +72,6 @@ t = 0.03
 #
 # %%
 mesh = create_rectangle(MPI.COMM_WORLD, np.array([[-np.pi / 2, 0], [np.pi / 2, L]]), [20, 20], CellType.triangle)
-#
 # topology dimension = 2
 tdim = mesh.topology.dim
 
@@ -86,9 +81,9 @@ tdim = mesh.topology.dim
 # %%
 x = ufl.SpatialCoordinate(mesh)
 phi0_ufl = ufl.as_vector([r * ufl.sin(x[0]), x[1], r * ufl.cos(x[0])])
-#
 # %% [markdown]
 # Given the analytical expression of midplane, we define the unit normal as below:
+#
 # $$
 # \vec{n}  = \frac{\partial_1 \phi_0 \times \partial_2 \phi_0}{\| \partial_1 \phi_0 \times \partial_2 \phi_0 \|}
 # $$
@@ -99,7 +94,6 @@ phi0_ufl = ufl.as_vector([r * ufl.sin(x[0]), x[1], r * ufl.cos(x[0])])
 def unit_normal(phi):
     n = ufl.cross(phi.dx(0), phi.dx(1))
     return n/ufl.sqrt(inner(n, n))
-#
 
 
 n0_ufl = unit_normal(phi0_ufl)
@@ -133,31 +127,26 @@ def tangent_1(n):
     return t1
 
 
-#
 def tangent_2(n, t1):
     t2 = ufl.cross(n, t1)
     t2 = t2/ufl.sqrt(inner(t2, t2))
     return t2
 
 
-#
 # the analytical expression of t1 and t2
 t1_ufl = tangent_1(n0_ufl)
 t2_ufl = tangent_2(n0_ufl, t1_ufl)
-#
+
+
 # the analytical expression of R0
-
-
 def rotation_matrix(t1, t2, n):
     R = ufl.as_matrix([[t1[0], t2[0], n[0]],
                        [t1[1], t2[1], n[1]],
                        [t1[2], t2[2], n[2]]])
     return R
-#
 
 
 R0_ufl = rotation_matrix(t1_ufl, t2_ufl, n0_ufl)
-#
 # %% [markdown]
 # The kinematics of the Nadghi shell model is defined by the following vector fields :
 # - $\vec{\phi}$: the position of the midplane in the deformed configuration, or equivalently, the displacement
@@ -183,22 +172,21 @@ R0_ufl = rotation_matrix(t1_ufl, t2_ufl, n0_ufl)
 #
 # The rotation matrix $\mathbf{R}$ on the other hand is equivalent to rotate around the fixed axis $\vec{e}_1$ and
 # $\vec{e}_2$ (Proof see [3]):
+#
 # $$
 # \mathbf{R} = \mathbf{R}_0 \text{exp}[\theta_2 \hat{\mathbf{e}}_{2}] \text{exp}[\theta_1 \hat{\mathbf{e}}_1]
-# $
+# $$
 #
 # Therefore, the director $\vec{d}$ is updated with $(\theta_1, \theta_2)$ by:
 #
 # $$
-# \vec{d} =\mathbf{R} \vec{e}_3 = \mathbf{R}_0 \vec{\Lambda}_3, \quad \vec{\Lambda}_3 = [\sin(\theta_2)\cos(\theta_1),
-# -\sin(\theta_1), \cos(\theta_2)\cos(\theta_1)]^\text{T}
-# $
+# \vec{d} =\mathbf{R} \vec{e}_3 = \mathbf{R}_0 \vec{\Lambda}_3, \quad \vec{\Lambda}_3 =
+# [\sin(\theta_2)\cos(\theta_1), -\sin(\theta_1), \cos(\theta_2)\cos(\theta_1)]^\text{T}
+# $$
 #
 # Note: the above formular becomes singular when $\theta_1 = \pm \pi/2, ...$, (See Chapter 4.2.1 in [3] for details)
-#
 # %%
 # Update the director with two successive elementary rotations
-#
 
 
 def director(R0, theta):
@@ -207,7 +195,6 @@ def director(R0, theta):
     return d
 
 
-#
 # %% [markdown]
 # In our 5-parameter Naghdi shell model the configuration of the shell is assigned by:
 # - the 3-component vector field $\vec{u}$ representing the displacement with respect to the initial configuration
@@ -223,10 +210,8 @@ def director(R0, theta):
 # for the 3 translation DOFs, we use the P2 + B3 enriched element
 P2 = FiniteElement("Lagrange", ufl.triangle, degree=2)
 B3 = FiniteElement("Bubble", ufl.triangle, degree=3)
-#
 # Enriched
 P2B3 = P2 + B3
-#
 # for 2 rotation DOFs, we use P2 element
 # mixed element for u and theta
 naghdi_shell_element = MixedElement([VectorElement(P2B3, dim=3), VectorElement(P2, dim=2)])
@@ -247,6 +232,7 @@ u_func, theta_func = split(q_func)  # current displacement and rotation
 # We calculate the deformation gradient and the first, second fundamental forms:
 #
 # - Deformation gradient $\mathbf{F}$
+#
 # $$
 # \mathbf{F} = \nabla \vec{\phi} \quad  (F_{ij} = \frac{\partial \phi_i}{\partial \xi_j}); \quad \vec{\phi} =
 # \vec{\phi}_0 +
@@ -255,10 +241,10 @@ u_func, theta_func = split(q_func)  # current displacement and rotation
 #
 # - Metric tensor $\mathbf{a} \in \mathbb{S}^2_+$ and curvature tensor $\mathbf{b} \in \mathbb{S}^2$ (First and second
 # fundamental form)
+#
 # $$
 # \mathbf{a} = {\nabla \vec{\phi}} ^{T} \nabla \vec{\phi} \\
 # \mathbf{b} = -\frac{1}{2}({\nabla \vec{\phi}} ^{T} \nabla \vec{d} + {\nabla \vec{d}} ^{T} \nabla \vec{\phi})
-#
 # $$
 #
 # In the initial configuration, $\vec{d} = \vec{n}$, $\vec{\phi} = \vec{\phi}_0$, the conresponding initial tensors are
@@ -301,19 +287,19 @@ b0_ufl = -0.5*(grad(phi0_ufl).T * grad(n0_ufl) + grad(n0_ufl).T * grad(phi0_ufl)
 #
 
 # %%
+
+
 # membrane strain
-
-
 def epsilon(F):
     return 0.5 * (F.T * F - a0_ufl)
 
 
-# # bending strain
+# bending strain
 def kappa(F, d):
     return -0.5 * (F.T * grad(d) + grad(d).T * F) - b0_ufl
 
 
-# # transverse shear strain (zero initial shear strain)
+# transverse shear strain (zero initial shear strain)
 def gamma(F, d):
     return F.T * d
 
@@ -457,9 +443,9 @@ Jacobian = ufl.derivative(Residual, q_func, q_trial)
 #     - $u_{1,2,3} = \theta_{1,2} = 0$
 
 # %%
+
+
 # clamped boundary condition
-
-
 def clamped_boundary(x):
     return np.isclose(x[1], 0.0)
 
@@ -485,9 +471,9 @@ bc_clamped_theta = dirichletbc(theta_clamped, clamped_dofs_theta, naghdi_shell_F
 #     - $u_3 = \theta_2 = 0$
 
 # %%
+
+
 # symmetry boundary condition
-
-
 def symm_boundary(x):
     return np.isclose(abs(x[0]), np.pi/2)
 
@@ -591,9 +577,8 @@ class NonlinearProblemPointSource(NonlinearProblem):
 # %% [markdown]
 # We use a standard Newton solver and modify the linear solver in each Newton iteration
 
+
 # %%
-
-
 problem = NonlinearProblemPointSource(Residual, q_func, bcs, Jacobian, cells, basis_values)
 
 solver = NewtonSolver(mesh.comm, problem)
@@ -618,8 +603,6 @@ ksp.setFromOptions()
 # Finally, we can solve the quasi-static problem, incrementally increasing the loading from 0 to $2000N$
 
 # %%
-# log.set_log_level(log.LogLevel.INFO)
-
 PS_diff = 50.0
 n_step = 40
 
@@ -656,8 +639,6 @@ for i in range(1, n_step + 1):
 
 # %%
 # interpolate phi_ufl into CG2 Space
-# log.set_log_level(log.LogLevel.OFF)
-
 u_P2B3 = q_func.sub(0).collapse()
 theta_P2 = q_func.sub(1).collapse()
 
@@ -688,8 +669,6 @@ with dolfinx.io.VTXWriter(mesh.comm, results_folder/"phi_naghdi.bp", [phi_func])
 # reference from the literature, obtained using Abaqus S4R element and a structured mesh of 40×40 elements, see [1]:
 
 # %%
-
-
 if mesh.comm.rank == 0:
     fig = plt.figure(figsize=(8, 6))
     reference_u3 = 1.e-2*np.array([0., 5.421, 16.1, 22.195, 27.657, 32.7, 37.582, 42.633,
@@ -706,7 +685,7 @@ if mesh.comm.rank == 0:
     plt.grid()
     plt.savefig(results_folder/"comparisons.png")
 # %% [markdown]
-# # References
+# References:
 #
 # [1] K. Sze, X. Liu, and S. Lo. Popular benchmark problems for geometric nonlinear analysis of shells. Finite Elements
 # in Analysis and Design, 40(11):1551 – 1569, 2004.
