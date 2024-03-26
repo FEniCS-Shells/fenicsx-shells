@@ -23,23 +23,24 @@
 import typing
 from pathlib import Path
 
-import matplotlib.pyplot as plt
-import numpy as np
-# %%
-import dolfinx
-import ufl
-from dolfinx.fem import (Expression, Function, FunctionSpace, dirichletbc,
-                         locate_dofs_topological)
-from dolfinx.fem.bcs import DirichletBC
-from dolfinx.fem.function import Function as _Function
-from dolfinx.fem.petsc import (NonlinearProblem, apply_lifting,
-                               assemble_vector, set_bc)
-from dolfinx.mesh import CellType, create_rectangle, locate_entities_boundary
-from dolfinx.nls.petsc import NewtonSolver
-from ufl import FiniteElement, MixedElement, VectorElement, grad, inner, split
 # %%
 from mpi4py import MPI
 from petsc4py import PETSc
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+# %%
+import dolfinx
+import ufl
+from dolfinx.fem import Expression, Function, FunctionSpace, dirichletbc, locate_dofs_topological
+from dolfinx.fem.bcs import DirichletBC
+from dolfinx.fem.function import Function as _Function
+from dolfinx.fem.petsc import NonlinearProblem, apply_lifting, assemble_vector, set_bc
+from dolfinx.mesh import CellType, create_rectangle, locate_entities_boundary
+from dolfinx.nls.petsc import NewtonSolver
+from ufl import FiniteElement, MixedElement, VectorElement, grad, inner, split
+
 # %% [markdown]
 # We consider a semi-cylindrical shell of radius $r$ and axis length $L$. The shell is made of a linear elastic
 # isotropic homogeneous
@@ -51,9 +52,9 @@ from petsc4py import PETSc
 # %%
 r = 1.016
 L = 3.048
-E, nu = 2.0685E7, 0.3
-mu = E/(2.0*(1.0 + nu))
-lmbda = 2.0*mu*nu/(1.0 - 2.0*nu)
+E, nu = 2.0685e7, 0.3
+mu = E / (2.0 * (1.0 + nu))
+lmbda = 2.0 * mu * nu / (1.0 - 2.0 * nu)
 t = 0.03
 #
 # %% [markdown]
@@ -71,7 +72,9 @@ t = 0.03
 # We generate a mesh in the $(\xi_1, \xi_2)$ space with triangular elements
 #
 # %%
-mesh = create_rectangle(MPI.COMM_WORLD, np.array([[-np.pi / 2, 0], [np.pi / 2, L]]), [20, 20], CellType.triangle)
+mesh = create_rectangle(
+    MPI.COMM_WORLD, np.array([[-np.pi / 2, 0], [np.pi / 2, L]]), [20, 20], CellType.triangle
+)
 # topology dimension = 2
 tdim = mesh.topology.dim
 
@@ -93,7 +96,7 @@ phi0_ufl = ufl.as_vector([r * ufl.sin(x[0]), x[1], r * ufl.cos(x[0])])
 
 def unit_normal(phi):
     n = ufl.cross(phi.dx(0), phi.dx(1))
-    return n/ufl.sqrt(inner(n, n))
+    return n / ufl.sqrt(inner(n, n))
 
 
 n0_ufl = unit_normal(phi0_ufl)
@@ -123,13 +126,13 @@ n0_ufl = unit_normal(phi0_ufl)
 def tangent_1(n):
     e2 = ufl.as_vector([0, 1, 0])
     t1 = ufl.cross(e2, n)
-    t1 = t1/ufl.sqrt(inner(t1, t1))
+    t1 = t1 / ufl.sqrt(inner(t1, t1))
     return t1
 
 
 def tangent_2(n, t1):
     t2 = ufl.cross(n, t1)
-    t2 = t2/ufl.sqrt(inner(t2, t2))
+    t2 = t2 / ufl.sqrt(inner(t2, t2))
     return t2
 
 
@@ -140,9 +143,7 @@ t2_ufl = tangent_2(n0_ufl, t1_ufl)
 
 # the analytical expression of R0
 def rotation_matrix(t1, t2, n):
-    R = ufl.as_matrix([[t1[0], t2[0], n[0]],
-                       [t1[1], t2[1], n[1]],
-                       [t1[2], t2[2], n[2]]])
+    R = ufl.as_matrix([[t1[0], t2[0], n[0]], [t1[1], t2[1], n[1]], [t1[2], t2[2], n[2]]])
     return R
 
 
@@ -190,7 +191,13 @@ R0_ufl = rotation_matrix(t1_ufl, t2_ufl, n0_ufl)
 
 
 def director(R0, theta):
-    Lm3 = ufl.as_vector([ufl.sin(theta[1])*ufl.cos(theta[0]), -ufl.sin(theta[0]), ufl.cos(theta[1])*ufl.cos(theta[0])])
+    Lm3 = ufl.as_vector(
+        [
+            ufl.sin(theta[1]) * ufl.cos(theta[0]),
+            -ufl.sin(theta[0]),
+            ufl.cos(theta[1]) * ufl.cos(theta[0]),
+        ]
+    )
     d = ufl.dot(R0, Lm3)
     return d
 
@@ -259,7 +266,7 @@ d = director(R0_ufl, theta_func)
 
 # initial metric and curvature tensor a0 and b0
 a0_ufl = grad(phi0_ufl).T * grad(phi0_ufl)
-b0_ufl = -0.5*(grad(phi0_ufl).T * grad(n0_ufl) + grad(n0_ufl).T * grad(phi0_ufl))
+b0_ufl = -0.5 * (grad(phi0_ufl).T * grad(n0_ufl) + grad(n0_ufl).T * grad(phi0_ufl))
 
 # %% [markdown]
 # We define strain measures of the Naghdi shell model:
@@ -327,9 +334,13 @@ j0_ufl = ufl.det(a0_ufl)
 
 i, j, l, m = ufl.indices(4)
 A_contra_ufl = ufl.as_tensor(
-    (((2.0 * lmbda * mu) / (lmbda + 2.0 * mu)) * a0_contra_ufl[i, j] * a0_contra_ufl[l, m]
-        + 1.0 * mu * (a0_contra_ufl[i, l] * a0_contra_ufl[j, m] + a0_contra_ufl[i, m] * a0_contra_ufl[j, l])),
-    [i, j, l, m]
+    (
+        ((2.0 * lmbda * mu) / (lmbda + 2.0 * mu)) * a0_contra_ufl[i, j] * a0_contra_ufl[l, m]
+        + 1.0
+        * mu
+        * (a0_contra_ufl[i, l] * a0_contra_ufl[j, m] + a0_contra_ufl[i, m] * a0_contra_ufl[j, l])
+    ),
+    [i, j, l, m],
 )
 
 # %% [markdown]
@@ -374,11 +385,11 @@ T = ufl.as_tensor((t * mu * 5.0 / 6.0) * a0_contra_ufl[i, j] * gamma(F, d)[j], [
 # They are per unit surface in the initial configuration:
 
 # %%
-psi_m = 0.5*inner(N, epsilon(F))
+psi_m = 0.5 * inner(N, epsilon(F))
 
-psi_b = 0.5*inner(M, kappa(F, d))
+psi_b = 0.5 * inner(M, kappa(F, d))
 
-psi_s = 0.5*inner(T, gamma(F, d))
+psi_s = 0.5 * inner(T, gamma(F, d))
 
 # %% [markdown]
 # Shear and membrane locking is treated using the partial reduced selective integration proposed in Arnold and Brezzi
@@ -405,10 +416,10 @@ psi_s = 0.5*inner(T, gamma(F, d))
 
 # %%
 # Full integration of order 4
-dx_f = ufl.Measure('dx', domain=mesh, metadata={"quadrature_degree": 4})
+dx_f = ufl.Measure("dx", domain=mesh, metadata={"quadrature_degree": 4})
 
 # Reduced integration of order 2
-dx_r = ufl.Measure('dx', domain=mesh, metadata={"quadrature_degree": 2})
+dx_r = ufl.Measure("dx", domain=mesh, metadata={"quadrature_degree": 2})
 
 # Calculate the factor alpha as a function of the mesh size h
 h = ufl.CellDiameter(mesh)
@@ -463,7 +474,9 @@ bc_clamped_u = dirichletbc(u_clamped, clamped_dofs_u, naghdi_shell_FS.sub(0))
 
 # theta1, theta2 = 0 on the clamped boundary
 theta_clamped = Function(theta_FS)  # default value is 0
-clamped_dofs_theta = locate_dofs_topological((naghdi_shell_FS.sub(1), theta_FS), fdim, clamped_facets)
+clamped_dofs_theta = locate_dofs_topological(
+    (naghdi_shell_FS.sub(1), theta_FS), fdim, clamped_facets
+)
 bc_clamped_theta = dirichletbc(theta_clamped, clamped_dofs_theta, naghdi_shell_FS.sub(1))
 
 # %% [markdown]
@@ -475,17 +488,21 @@ bc_clamped_theta = dirichletbc(theta_clamped, clamped_dofs_theta, naghdi_shell_F
 
 # symmetry boundary condition
 def symm_boundary(x):
-    return np.isclose(abs(x[0]), np.pi/2)
+    return np.isclose(abs(x[0]), np.pi / 2)
 
 
 symm_facets = locate_entities_boundary(mesh, fdim, symm_boundary)
 
 # u3 = 0 on the symmetry boundary
-symm_dofs_u = locate_dofs_topological((naghdi_shell_FS.sub(0).sub(2), u_FS.sub(2)), fdim, symm_facets)
+symm_dofs_u = locate_dofs_topological(
+    (naghdi_shell_FS.sub(0).sub(2), u_FS.sub(2)), fdim, symm_facets
+)
 bc_symm_u = dirichletbc(u_clamped, symm_dofs_u, naghdi_shell_FS.sub(0).sub(2))
 
 # theta2 = 0 on the symmetry boundary
-symm_dofs_theta = locate_dofs_topological((naghdi_shell_FS.sub(1).sub(1), theta_FS.sub(1)), fdim, symm_facets)
+symm_dofs_theta = locate_dofs_topological(
+    (naghdi_shell_FS.sub(1).sub(1), theta_FS.sub(1)), fdim, symm_facets
+)
 bc_symm_theta = dirichletbc(theta_clamped, symm_dofs_theta, naghdi_shell_FS.sub(1).sub(1))
 
 # all together
@@ -503,14 +520,14 @@ def compute_cell_contributions(V, points):
     # Determine what process owns a point and what cells it lies within
     mesh = V.mesh
     _, _, owning_points, cells = dolfinx.cpp.geometry.determine_point_ownership(
-        mesh._cpp_object, points, 1e-6)
+        mesh._cpp_object, points, 1e-6
+    )
     owning_points = np.asarray(owning_points).reshape(-1, 3)
 
     # Pull owning points back to reference cell
     mesh_nodes = mesh.geometry.x
     cmap = mesh.geometry.cmaps[0]
-    ref_x = np.zeros((len(cells), mesh.geometry.dim),
-                     dtype=mesh.geometry.x.dtype)
+    ref_x = np.zeros((len(cells), mesh.geometry.dim), dtype=mesh.geometry.x.dtype)
     for i, (point, cell) in enumerate(zip(owning_points, cells)):
         geom_dofs = mesh.geometry.dofmap[cell]
         ref_x[i] = cmap.pull_back(point.reshape(-1, 3), mesh_nodes[geom_dofs])
@@ -524,10 +541,9 @@ def compute_cell_contributions(V, points):
         values = expr.eval(mesh, np.asarray(cells, dtype=np.int32))
 
         # Strip out basis function values per cell
-        basis_values = values[:num_dofs:num_dofs*len(cells)]
+        basis_values = values[: num_dofs : num_dofs * len(cells)]
     else:
-        basis_values = np.zeros(
-            (0, num_dofs), dtype=dolfinx.default_scalar_type)
+        basis_values = np.zeros((0, num_dofs), dtype=dolfinx.default_scalar_type)
     return cells, basis_values
 
 
@@ -549,8 +565,16 @@ cells, basis_values = compute_cell_contributions(naghdi_shell_FS, points)
 
 
 class NonlinearProblemPointSource(NonlinearProblem):
-    def __init__(self, F: ufl.form.Form, u: _Function, bcs: typing.List[DirichletBC] = [],
-                 J: ufl.form.Form = None, cells=[], basis_values=[], PS: float = 0.0):
+    def __init__(
+        self,
+        F: ufl.form.Form,
+        u: _Function,
+        bcs: typing.List[DirichletBC] = [],
+        J: ufl.form.Form = None,
+        cells=[],
+        basis_values=[],
+        PS: float = 0.0,
+    ):
         super().__init__(F, u, bcs, J)
         self.PS = PS
         self.cells = cells
@@ -568,11 +592,14 @@ class NonlinearProblemPointSource(NonlinearProblem):
             for cell, basis_value in zip(self.cells, self.basis_values):
                 dofs = self.function_space.sub(0).sub(2).dofmap.cell_dofs(cell)
                 with b.localForm() as b_local:
-                    b_local.setValuesLocal(dofs, basis_value * self.PS, addv=PETSc.InsertMode.ADD_VALUES)
+                    b_local.setValuesLocal(
+                        dofs, basis_value * self.PS, addv=PETSc.InsertMode.ADD_VALUES
+                    )
         # Apply boundary condition
         apply_lifting(b, [self._a], bcs=[self.bcs], x0=[x], scale=-1.0)
         b.ghostUpdate(addv=PETSc.InsertMode.ADD, mode=PETSc.ScatterMode.REVERSE)
         set_bc(b, self.bcs, x, -1.0)
+
 
 # %% [markdown]
 # We use a standard Newton solver and modify the linear solver in each Newton iteration
@@ -618,7 +645,7 @@ bb_point = np.array([[0.0, L, 0.0]], dtype=np.float64)
 for i in range(1, n_step + 1):
     problem.PS = PS_diff * i
     n, converged = solver.solve(q_func)
-    assert (converged)
+    assert converged
     q_func.x.scatter_forward()
     if mesh.comm.rank == 0:
         print(f"Load step {i:d}, Number of iterations: {n:d}, Load: {problem.PS:.2f}", flush=True)
@@ -655,13 +682,13 @@ u_P2.interpolate(u_P2B3)
 results_folder = Path("results/nonlinear_Naghdi/semi_cylinder")
 results_folder.mkdir(exist_ok=True, parents=True)
 
-with dolfinx.io.VTXWriter(mesh.comm, results_folder/"u_naghdi.bp", [u_P2]) as vtx:
+with dolfinx.io.VTXWriter(mesh.comm, results_folder / "u_naghdi.bp", [u_P2]) as vtx:
     vtx.write(0)
 
-with dolfinx.io.VTXWriter(mesh.comm, results_folder/"theta_naghdi.bp", [theta_P2]) as vtx:
+with dolfinx.io.VTXWriter(mesh.comm, results_folder / "theta_naghdi.bp", [theta_P2]) as vtx:
     vtx.write(0)
 
-with dolfinx.io.VTXWriter(mesh.comm, results_folder/"phi_naghdi.bp", [phi_func]) as vtx:
+with dolfinx.io.VTXWriter(mesh.comm, results_folder / "phi_naghdi.bp", [phi_func]) as vtx:
     vtx.write(0)
 
 # %% [markdown]
@@ -671,19 +698,73 @@ with dolfinx.io.VTXWriter(mesh.comm, results_folder/"phi_naghdi.bp", [phi_func])
 # %%
 if mesh.comm.rank == 0:
     fig = plt.figure(figsize=(8, 6))
-    reference_u3 = 1.e-2*np.array([0., 5.421, 16.1, 22.195, 27.657, 32.7, 37.582, 42.633,
-                                   48.537, 56.355, 66.410, 79.810, 94.669, 113.704, 124.751, 132.653,
-                                   138.920, 144.185, 148.770, 152.863, 156.584, 160.015, 163.211,
-                                   166.200, 168.973, 171.505])
-    reference_P = 2000.*np.array([0., .05, .1, .125, .15, .175, .2, .225, .25, .275, .3,
-                                  .325, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8, .85, .9, .95, 1.])
-    plt.plot(-u3_list, PS_list, label='FEniCSx-shell 20 x 20')
-    plt.plot(reference_u3, reference_P, "or", label='Sze (Abaqus S4R)')
+    reference_u3 = 1.0e-2 * np.array(
+        [
+            0.0,
+            5.421,
+            16.1,
+            22.195,
+            27.657,
+            32.7,
+            37.582,
+            42.633,
+            48.537,
+            56.355,
+            66.410,
+            79.810,
+            94.669,
+            113.704,
+            124.751,
+            132.653,
+            138.920,
+            144.185,
+            148.770,
+            152.863,
+            156.584,
+            160.015,
+            163.211,
+            166.200,
+            168.973,
+            171.505,
+        ]
+    )
+    reference_P = 2000.0 * np.array(
+        [
+            0.0,
+            0.05,
+            0.1,
+            0.125,
+            0.15,
+            0.175,
+            0.2,
+            0.225,
+            0.25,
+            0.275,
+            0.3,
+            0.325,
+            0.35,
+            0.4,
+            0.45,
+            0.5,
+            0.55,
+            0.6,
+            0.65,
+            0.7,
+            0.75,
+            0.8,
+            0.85,
+            0.9,
+            0.95,
+            1.0,
+        ]
+    )
+    plt.plot(-u3_list, PS_list, label="FEniCSx-shell 20 x 20")
+    plt.plot(reference_u3, reference_P, "or", label="Sze (Abaqus S4R)")
     plt.xlabel("Displacement (mm)")
     plt.ylabel("Load (N)")
     plt.legend()
     plt.grid()
-    plt.savefig(results_folder/"comparisons.png")
+    plt.savefig(results_folder / "comparisons.png")
 # %% [markdown]
 # References:
 #
