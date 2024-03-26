@@ -42,7 +42,7 @@ from dolfinx.fem.function import Function as _Function
 from dolfinx.fem.petsc import NonlinearProblem, apply_lifting, assemble_vector, set_bc
 from dolfinx.mesh import CellType, create_rectangle, locate_entities_boundary
 from dolfinx.nls.petsc import NewtonSolver
-from ufl import MixedElement, VectorElement, grad, inner, split
+from ufl import grad, inner, split
 
 # %% [markdown]
 # We consider a semi-cylindrical shell of radius $r$ and axis length $L$. The shell is made of a
@@ -242,7 +242,8 @@ B3 = ufl.FiniteElement("Bubble", ufl.triangle, degree=3)
 P2B3 = P2 + B3
 # for 2 rotation DOFs, we use P2 element
 # mixed element for u and theta
-naghdi_shell_element = MixedElement([VectorElement(P2B3, dim=3), VectorElement(P2, dim=2)])
+naghdi_shell_element = ufl.MixedElement([ufl.VectorElement(P2B3, dim=3),
+                                         ufl.VectorElement(P2, dim=2)])
 naghdi_shell_FS = FunctionSpace(mesh, naghdi_shell_element)
 
 # %% [markdown]
@@ -712,7 +713,7 @@ u_P2B3 = q_func.sub(0).collapse()
 theta_P2 = q_func.sub(1).collapse()
 
 # Interpolate phi in the [P2]³ Space
-phi_FS = FunctionSpace(mesh, VectorElement("Lagrange", ufl.triangle, degree=2, dim=3))
+phi_FS = FunctionSpace(mesh, ufl.VectorElement("Lagrange", ufl.triangle, degree=2, dim=3))
 phi_expr = Expression(phi0_ufl + u_P2B3, phi_FS.element.interpolation_points())
 phi_func = Function(phi_FS)
 phi_func.interpolate(phi_expr)
