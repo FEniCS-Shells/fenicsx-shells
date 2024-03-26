@@ -37,12 +37,13 @@
 
 import numpy as np
 
+from basix.ufl import element, mixed_element
 import dolfinx
 import ufl
-from dolfinx.fem import FunctionSpace, dirichletbc
+from dolfinx.fem import functionspace, dirichletbc
 from dolfinx.fem.petsc import LinearProblem
 from dolfinx.mesh import CellType, create_unit_square
-from ufl import (FacetNormal, FiniteElement, Identity, Measure, MixedElement,
+from ufl import (FacetNormal, Identity, Measure,
                  grad, inner, sym, tr)
 
 from mpi4py import MPI
@@ -65,9 +66,9 @@ mesh = create_unit_square(MPI.COMM_WORLD, 16, 16, CellType.triangle)
 
 # +
 k = 2
-U_el = MixedElement([FiniteElement("Lagrange", ufl.triangle, k + 1),
-                     FiniteElement("HHJ", ufl.triangle, k)])
-U = FunctionSpace(mesh, U_el)
+U_el = mixed_element([element("Lagrange", mesh.basix_cell(), k + 1),
+                      element("HHJ", mesh.basix_cell(), k)])
+U = functionspace(mesh, U_el)
 
 w, M = ufl.TrialFunctions(U)
 w_t, M_t = ufl.TestFunctions(U)
