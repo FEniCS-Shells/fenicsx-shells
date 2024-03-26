@@ -21,11 +21,11 @@ def process():
     # Iterate over subdirectories containing demos
     for subdir in subdirs:
         # Make demo doc directory
-        demo_dir = pathlib.Path('./demo')
+        demo_dir = pathlib.Path("./demo")
         demo_dir.mkdir(parents=True, exist_ok=True)
 
         # Process each demo using jupytext/myst
-        for demo in subdir.glob('**/demo*.py'):
+        for demo in subdir.glob("**/demo*.py"):
             # If demo saves matplotlib images, run the demo
             if "savefig" in demo.read_text():
                 here = os.getcwd()

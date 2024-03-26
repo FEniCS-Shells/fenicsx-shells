@@ -35,7 +35,7 @@ import ufl
 from dolfinx.fem import Function, functionspace, dirichletbc
 from dolfinx.fem.petsc import LinearProblem
 from dolfinx.mesh import CellType, create_unit_square
-from ufl import (dx, grad, inner, split, sym, tr)
+from ufl import dx, grad, inner, split, sym, tr
 
 from mpi4py import MPI
 
@@ -64,8 +64,14 @@ mesh = create_unit_square(MPI.COMM_WORLD, 32, 32, CellType.quadrilateral)
 
 # +
 cell = mesh.basix_cell()
-U_el = mixed_element([element("Lagrange", cell, 1, shape=(2,), element("Lagrange", cell, 1),
-                      element("RTCE", cell, 1), element("RTCE", cell, 1)])
+U_el = mixed_element(
+    [
+        element("Lagrange", cell, 1, shape=(2,)),
+        element("Lagrange", cell, 1),
+        element("RTCE", cell, 1),
+        element("RTCE", cell, 1),
+    ]
+)
 U = functionspace(mesh, U_el)
 
 u_ = Function(U)
@@ -80,7 +86,7 @@ theta_, w_, R_gamma_, p_ = split(u_)
 
 E = 10920.0
 nu = 0.3
-kappa = 5.0/6.0
+kappa = 5.0 / 6.0
 t = 0.001
 
 # The bending strain tensor $k$ for the Reissner-Mindlin model can be expressed
@@ -100,9 +106,9 @@ t = 0.001
 #
 # which can be expressed in UFL as
 
-D = (E*t**3)/(24.0*(1.0 - nu**2))
+D = (E * t**3) / (24.0 * (1.0 - nu**2))
 k = sym(grad(theta_))
-psi_b = D*((1.0 - nu)*tr(k*k) + nu*(tr(k))**2)
+psi_b = D * ((1.0 - nu) * tr(k * k) + nu * (tr(k)) ** 2)
 
 # Because we are using a mixed variational formulation, we choose to write the
 # shear energy density $\psi_s$ is a function of the reduced shear strain
@@ -112,7 +118,7 @@ psi_b = D*((1.0 - nu)*tr(k*k) + nu*(tr(k))**2)
 #
 # or in UFL:
 
-psi_s = ((E*kappa*t)/(4.0*(1.0 + nu)))*inner(R_gamma_, R_gamma_)
+psi_s = ((E * kappa * t) / (4.0 * (1.0 + nu))) * inner(R_gamma_, R_gamma_)
 
 # Finally, we can write out external work due to the uniform loading in the out-of-plane direction
 #
@@ -126,7 +132,7 @@ psi_s = ((E*kappa*t)/(4.0*(1.0 + nu)))*inner(R_gamma_, R_gamma_)
 #
 # In UFL this can be expressed as
 
-W_ext = inner(1.0*t**3, w_)*dx
+W_ext = inner(1.0 * t**3, w_) * dx
 
 # With all of the standard mechanical terms defined, we can turn to defining
 # the Duran-Liberman reduction operator. This operator 'ties' our reduced shear
@@ -162,16 +168,15 @@ gamma = grad(w_) - theta_
 # choose to write this function in full here.
 
 # +
-dSp = ufl.Measure('dS', metadata={'quadrature_degree': 1})
-dsp = ufl.Measure('ds', metadata={'quadrature_degree': 1})
+dSp = ufl.Measure("dS", metadata={"quadrature_degree": 1})
+dsp = ufl.Measure("ds", metadata={"quadrature_degree": 1})
 
 n = ufl.FacetNormal(mesh)
 t = ufl.as_vector((-n[1], n[0]))
 
 
 def inner_e(x, y):
-    return (inner(x, t)*inner(y, t))('+') * \
-        dSp + (inner(x, t)*inner(y, t))*dsp
+    return (inner(x, t) * inner(y, t))("+") * dSp + (inner(x, t) * inner(y, t)) * dsp
 
 
 Pi_R = inner_e(gamma - R_gamma_, p_)
@@ -181,7 +186,7 @@ Pi_R = inner_e(gamma - R_gamma_, p_)
 # residual and Jacobian automatically using the standard UFL `derivative`
 # function
 
-Pi = psi_b*dx + psi_s*dx + Pi_R - W_ext
+Pi = psi_b * dx + psi_s * dx + Pi_R - W_ext
 F = ufl.derivative(Pi, u_, u_t)
 J = ufl.derivative(F, u_, u)
 
@@ -210,9 +215,9 @@ def top_or_bottom(x):
 
 def make_bc(value, V, on_boundary):
     boundary_entities = dolfinx.mesh.locate_entities_boundary(
-        mesh, mesh.topology.dim - 1, on_boundary)
-    boundary_dofs = dolfinx.fem.locate_dofs_topological(
-        V, mesh.topology.dim - 1, boundary_entities)
+        mesh, mesh.topology.dim - 1, on_boundary
+    )
+    boundary_dofs = dolfinx.fem.locate_dofs_topological(V, mesh.topology.dim - 1, boundary_entities)
     bc = dirichletbc(value, boundary_dofs, V)
     return bc
 
@@ -228,15 +233,18 @@ bcs.append(make_bc(np.array(0.0, dtype=np.float64), U.sub(0).sub(0), top_or_bott
 bcs.append(make_bc(np.array(0.0, dtype=np.float64), U.sub(0).sub(1), left_or_right))
 
 
-problem = LinearProblem(J, -F, bcs=bcs, petsc_options={
-                        "ksp_type": "preonly", "pc_type": "lu", "pc_factor_mat_solver_type": "mumps"})
+problem = LinearProblem(
+    J,
+    -F,
+    bcs=bcs,
+    petsc_options={"ksp_type": "preonly", "pc_type": "lu", "pc_factor_mat_solver_type": "mumps"},
+)
 u_ = problem.solve()
 
 bb_tree = dolfinx.geometry.bb_tree(mesh, 2)
 point = np.array([[0.5, 0.5, 0.0]], dtype=np.float64)
 cell_candidates = dolfinx.geometry.compute_collisions_points(bb_tree, point)
-cells = dolfinx.geometry.compute_colliding_cells(
-    mesh, cell_candidates, point)
+cells = dolfinx.geometry.compute_colliding_cells(mesh, cell_candidates, point)
 
 theta, w, R_gamma, p = u_.split()
 

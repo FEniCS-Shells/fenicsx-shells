@@ -75,8 +75,9 @@ mesh = create_unit_square(MPI.COMM_WORLD, 16, 16, CellType.triangle)
 # +
 k = 3
 cell = mesh.basix_cell()
-U_el = mixed_element([element("N2curl", cell, k), element("Lagrange", cell, k + 1),
-                      element("HHJ", cell, k)])
+U_el = mixed_element(
+    [element("N2curl", cell, k), element("Lagrange", cell, k + 1), element("HHJ", cell, k)]
+)
 U = functionspace(mesh, U_el)
 
 u = ufl.TrialFunction(U)
@@ -92,7 +93,7 @@ theta_t, w_t, M_t = split(u_t)
 # +
 E = 10920.0
 nu = 0.3
-kappa = 5.0/6.0
+kappa = 5.0 / 6.0
 t = 0.001
 # -
 
@@ -144,13 +145,13 @@ def k_theta(theta):
 
 def k_M(M):
     """Bending strain tensor in terms of bending moments"""
-    return (12.0/(E*t**3))*((1.0 + nu)*M - nu*Identity(2)*tr(M))
+    return (12.0 / (E * t**3)) * ((1.0 + nu) * M - nu * Identity(2) * tr(M))
 
 
 def nn(M):
     """Normal-normal component of tensor"""
     n = FacetNormal(M.ufl_domain())
-    M_n = M*n
+    M_n = M * n
     M_nn = ufl.dot(M_n, n)
     return M_nn
 
@@ -159,8 +160,11 @@ def inner_divdiv(M, theta):
     """Discrete div-div inner product"""
     n = FacetNormal(M.ufl_domain())
     M_nn = nn(M)
-    result = -inner(M, k_theta(theta))*dx + inner(M_nn("+"),
-                                                  ufl.jump(theta, n))*dS + inner(M_nn, ufl.dot(theta, n))*ds
+    result = (
+        -inner(M, k_theta(theta)) * dx
+        + inner(M_nn("+"), ufl.jump(theta, n)) * dS
+        + inner(M_nn, ufl.dot(theta, n)) * ds
+    )
     return result
 
 
@@ -169,9 +173,13 @@ def gamma(theta, w):
     return grad(w) - theta
 
 
-a = inner(k_M(M), M_t)*dx + inner_divdiv(M_t, theta) + inner_divdiv(M, theta_t) - \
-    ((E*kappa*t)/(2.0*(1.0 + nu)))*inner(gamma(theta, w), gamma(theta_t, w_t))*dx
-L = -inner(1.0*t**3, w_t)*dx
+a = (
+    inner(k_M(M), M_t) * dx
+    + inner_divdiv(M_t, theta)
+    + inner_divdiv(M, theta_t)
+    - ((E * kappa * t) / (2.0 * (1.0 + nu))) * inner(gamma(theta, w), gamma(theta_t, w_t)) * dx
+)
+L = -inner(1.0 * t**3, w_t) * dx
 
 # -
 
@@ -207,19 +215,20 @@ def all_boundary(x):
     return np.full(x.shape[1], True, dtype=bool)
 
 
-boundary_entities = dolfinx.mesh.locate_entities_boundary(
-    mesh, mesh.topology.dim - 1, all_boundary)
+boundary_entities = dolfinx.mesh.locate_entities_boundary(mesh, mesh.topology.dim - 1, all_boundary)
 
 bcs = []
 # Transverse displacement
 boundary_dofs = dolfinx.fem.locate_dofs_topological(
-    U.sub(1), mesh.topology.dim - 1, boundary_entities)
+    U.sub(1), mesh.topology.dim - 1, boundary_entities
+)
 bcs.append(dirichletbc(np.array(0.0, dtype=np.float64), boundary_dofs, U.sub(1)))
 
 # Fix tangential component of rotation
 R = U.sub(0).collapse()[0]
 boundary_dofs = dolfinx.fem.locate_dofs_topological(
-    (U.sub(0), R), mesh.topology.dim - 1, boundary_entities)
+    (U.sub(0), R), mesh.topology.dim - 1, boundary_entities
+)
 
 theta_bc = Function(R)
 bcs.append(dirichletbc(theta_bc, boundary_dofs, U.sub(0)))
@@ -230,15 +239,18 @@ bcs.append(dirichletbc(theta_bc, boundary_dofs, U.sub(0)))
 # centre of the plate.
 
 # +
-problem = LinearProblem(a, L, bcs=bcs, petsc_options={
-                        "ksp_type": "preonly", "pc_type": "lu", "pc_factor_mat_solver_type": "mumps"})
+problem = LinearProblem(
+    a,
+    L,
+    bcs=bcs,
+    petsc_options={"ksp_type": "preonly", "pc_type": "lu", "pc_factor_mat_solver_type": "mumps"},
+)
 u_h = problem.solve()
 
 bb_tree = dolfinx.geometry.bb_tree(mesh, 2)
 point = np.array([[0.5, 0.5, 0.0]], dtype=np.float64)
 cell_candidates = dolfinx.geometry.compute_collisions_points(bb_tree, point)
-cells = dolfinx.geometry.compute_colliding_cells(
-    mesh, cell_candidates, point)
+cells = dolfinx.geometry.compute_colliding_cells(mesh, cell_candidates, point)
 
 theta, w, M = u_h.split()
 
