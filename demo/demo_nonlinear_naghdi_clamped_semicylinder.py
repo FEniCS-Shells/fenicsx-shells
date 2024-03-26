@@ -242,8 +242,9 @@ B3 = ufl.FiniteElement("Bubble", ufl.triangle, degree=3)
 P2B3 = P2 + B3
 # for 2 rotation DOFs, we use P2 element
 # mixed element for u and theta
-naghdi_shell_element = ufl.MixedElement([ufl.VectorElement(P2B3, dim=3),
-                                         ufl.VectorElement(P2, dim=2)])
+naghdi_shell_element = ufl.MixedElement(
+    [ufl.VectorElement(P2B3, dim=3), ufl.VectorElement(P2, dim=2)]
+)
 naghdi_shell_FS = FunctionSpace(mesh, naghdi_shell_element)
 
 # %% [markdown]
