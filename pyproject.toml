@@ -1,6 +1,6 @@
 [build-system]
-requires = ["scikit-build-core[pyproject]", "wheel", "pybind11"]
-build-backend = "scikit_build_core.build"
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "fenicsx-shells"
