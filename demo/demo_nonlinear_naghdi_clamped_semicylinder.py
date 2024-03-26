@@ -4,16 +4,19 @@
 # Modified by: Tian Yang
 #
 # %% [markdown]
-# This demo program solves the nonlinear Naghdi shell equations for a semi-cylindrical shell loaded by a point force.
-# This problem is a standard reference for testing shell finite element formulations, see [1]. The numerical locking
-# issue is cured using enriched finite element including cubic bubble shape functions and Partial Selective Reduced
+# This demo program solves the nonlinear Naghdi shell equations for a semi-cylindrical shell loaded
+# by a point force.
+# This problem is a standard reference for testing shell finite element formulations, see [1]. The
+# numerical locking issue is cured using enriched finite element including cubic bubble shape
+# functions and Partial Selective Reduced
 # Integration [2].
 #
 # It is assumed the reader understands most of the basic functionality of the new FEniCSx Project.
 #
 # This demo then illustrates how to:
 #
-# - Define and solve a nonlinear Naghdi shell problem with a curved stress-free configuration given as analytical
+# - Define and solve a nonlinear Naghdi shell problem with a curved stress-free configuration given
+# as analytical
 # expression in terms of two curvilinear coordinates.
 # - Use the PSRI approach to simultaneously cure shear- and membrane-locking issues.
 #
@@ -42,7 +45,8 @@ from dolfinx.nls.petsc import NewtonSolver
 from ufl import FiniteElement, MixedElement, VectorElement, grad, inner, split
 
 # %% [markdown]
-# We consider a semi-cylindrical shell of radius $r$ and axis length $L$. The shell is made of a linear elastic
+# We consider a semi-cylindrical shell of radius $r$ and axis length $L$. The shell is made of a
+# linear elastic
 # isotropic homogeneous
 # material with Young modulus $E$ and Poisson ratio $\nu$. The
 # (uniform) shell thickness is denoted by $t$.
@@ -58,14 +62,16 @@ lmbda = 2.0 * mu * nu / (1.0 - 2.0 * nu)
 t = 0.03
 #
 # %% [markdown]
-# The midplane of the initial (stress-free) configuration $\vec{\phi_0}$ of the shell is given in the form of an
+# The midplane of the initial (stress-free) configuration $\vec{\phi_0}$ of the shell is given in
+# the form of an
 # analytical expression:
 #
 # $$
 # \vec{\phi}_0(\xi_1, \xi_2) \subset \mathbb{R}³
 # $$
 #
-# where $\xi_1 \in [-\pi/2, \pi/2]$ and $\xi_2 \in [0, L]$ are the curvilinear coordinates. In this case, they
+# where $\xi_1 \in [-\pi/2, \pi/2]$ and $\xi_2 \in [0, L]$ are the curvilinear coordinates.
+# In this case, they
 # represent the angular and axial coordinates, respectively.
 #
 # %% [markdown]
@@ -88,7 +94,8 @@ phi0_ufl = ufl.as_vector([r * ufl.sin(x[0]), x[1], r * ufl.cos(x[0])])
 # Given the analytical expression of midplane, we define the unit normal as below:
 #
 # $$
-# \vec{n}  = \frac{\partial_1 \phi_0 \times \partial_2 \phi_0}{\| \partial_1 \phi_0 \times \partial_2 \phi_0 \|}
+# \vec{n}  = \frac{\partial_1 \phi_0 \times \partial_2 \phi_0}{\| \partial_1 \phi_0 \times
+# \partial_2 \phi_0 \|}
 # $$
 #
 # %%
@@ -101,14 +108,16 @@ def unit_normal(phi):
 
 n0_ufl = unit_normal(phi0_ufl)
 # %% [markdown]
-# We define a local orthonormal frame $\{\vec{t}_{01}, \vec{t}_{02}, \vec{n}\}$ of the initial configuration $\phi_0$
+# We define a local orthonormal frame $\{\vec{t}_{01}, \vec{t}_{02}, \vec{n}\}$ of the initial
+# configuration $\phi_0$
 # by rotating the global Cartesian basis $\vec{e}_i$ with a rotation matrix $\mathbf{R}_0$:
 #
 # $$
 # \vec{t}_{0i} = \mathbf{R}_0 \vec{e}_i , \quad \vec{n} = \vec{t}_{03},
 # $$
 #
-# A convienent choice of $\vec{t}_{01}$ and $\vec{t}_{02}$ (when $\vec{n} \nparallel \vec{e}_2 $) could be:
+# A convienent choice of $\vec{t}_{01}$ and $\vec{t}_{02}$ (when $\vec{n} \nparallel \vec{e}_2 $)
+# could be:
 # $$
 # \vec{t}_{01} = \frac{\vec{e}_2 \times \vec{n}}{\| \vec{e}_2 \times \vec{n}\|} \\
 # \vec{t}_{02} =   \vec{n} \times \vec{t}_{01}
@@ -150,32 +159,40 @@ def rotation_matrix(t1, t2, n):
 R0_ufl = rotation_matrix(t1_ufl, t2_ufl, n0_ufl)
 # %% [markdown]
 # The kinematics of the Nadghi shell model is defined by the following vector fields :
-# - $\vec{\phi}$: the position of the midplane in the deformed configuration, or equivalently, the displacement
+# - $\vec{\phi}$: the position of the midplane in the deformed configuration, or equivalently,
+# the displacement
 # $\vec{u} = \vec{\phi} - \vec{\phi}_0$
-# - $\vec{d}$: the director, a unit vector giving the orientation of fiber at the midplane. (not necessarily normal to
+# - $\vec{d}$: the director, a unit vector giving the orientation of fiber at the midplane.
+# (not necessarily normal to
 # the midsplane because of shears)
 #
 # %% [markdown]
-# According to [3], the director $\vec{d}$ in the deformed configuration can be parameterized with two successive
+# According to [3], the director $\vec{d}$ in the deformed configuration can be parameterized with
+# two successive
 # rotation angles $\theta_1, \theta_2$
 #
 # $$
-# \vec{t}_i = \mathbf{R} \vec{e}_i, \quad \mathbf{R}  = \text{exp}[\theta_1 \hat{\mathbf{t}}_1] \text{exp}[\theta_2
+# \vec{t}_i = \mathbf{R} \vec{e}_i, \quad \mathbf{R}  = \text{exp}[\theta_1 \hat{\mathbf{t}}_1]
+# \text{exp}[\theta_2
 # \hat{\mathbf{t}}_{02}] \mathbf{R}_0
 # $$
 #
 # The rotation matrix $\mathbf{R}$ represents three successive rotations:
 # - First one: the initial rotation matrix $\mathbf{R}_0$
-# - Second one :$\text{exp}[\theta_2 \hat{\mathbf{t}}_{02}]$ rotates a vector about the axis $\vec{t}_{02}$ of
+# - Second one :$\text{exp}[\theta_2 \hat{\mathbf{t}}_{02}]$ rotates a vector about the axis
+# $\vec{t}_{02}$ of
 # $\theta_2$ angle;
-# - Third one : $\text{exp}[\theta_1 \hat{\mathbf{t}}_1]$ rotates a vector about the axis $\vec{t}_{1}$ of $\theta_1$
+# - Third one : $\text{exp}[\theta_1 \hat{\mathbf{t}}_1]$ rotates a vector about the axis
+# $\vec{t}_{1}$ of $\theta_1$
 # angle, and $\vec{t}_1 = \text{exp}[\theta_2 \hat{\mathbf{t}}_{02}] \vec{t}_{01}$
 #
-# The rotation matrix $\mathbf{R}$ on the other hand is equivalent to rotate around the fixed axis $\vec{e}_1$ and
+# The rotation matrix $\mathbf{R}$ on the other hand is equivalent to rotate around the fixed
+# axis $\vec{e}_1$ and
 # $\vec{e}_2$ (Proof see [3]):
 #
 # $$
-# \mathbf{R} = \mathbf{R}_0 \text{exp}[\theta_2 \hat{\mathbf{e}}_{2}] \text{exp}[\theta_1 \hat{\mathbf{e}}_1]
+# \mathbf{R} = \mathbf{R}_0 \text{exp}[\theta_2 \hat{\mathbf{e}}_{2}]
+# \text{exp}[\theta_1 \hat{\mathbf{e}}_1]
 # $$
 #
 # Therefore, the director $\vec{d}$ is updated with $(\theta_1, \theta_2)$ by:
@@ -185,7 +202,8 @@ R0_ufl = rotation_matrix(t1_ufl, t2_ufl, n0_ufl)
 # [\sin(\theta_2)\cos(\theta_1), -\sin(\theta_1), \cos(\theta_2)\cos(\theta_1)]^\text{T}
 # $$
 #
-# Note: the above formular becomes singular when $\theta_1 = \pm \pi/2, ...$, (See Chapter 4.2.1 in [3] for details)
+# Note: the above formular becomes singular when $\theta_1 = \pm \pi/2, ...$, (See Chapter 4.2.1 in
+# [3] for details)
 # %%
 # Update the director with two successive elementary rotations
 
@@ -204,13 +222,16 @@ def director(R0, theta):
 
 # %% [markdown]
 # In our 5-parameter Naghdi shell model the configuration of the shell is assigned by:
-# - the 3-component vector field $\vec{u}$ representing the displacement with respect to the initial configuration
+# - the 3-component vector field $\vec{u}$ representing the displacement with respect to the
+# initial configuration
 # $\vec{\phi}_0$
-# - the 2-component vector field $\vec{\theta}$ representing the angle variation of the director $\vec{d}$ with respect
+# - the 2-component vector field $\vec{\theta}$ representing the angle variation of the director
+# $\vec{d}$ with respect
 # to initial unit normal $\vec{n}$
 #
 # %% [markdown]
-# Following [1], we use a $[P_2 + B_3]³$ element for $\vec{u}$ and a $[P_2]²$ element for $\vec{\theta}$ and collect
+# Following [1], we use a $[P_2 + B_3]³$ element for $\vec{u}$ and a $[P_2]²$ element for
+# $\vec{\theta}$ and collect
 # them in the state vector $\vec{q} = [\vec{u}, \vec{\theta}]$:
 #
 # %%
@@ -225,7 +246,8 @@ naghdi_shell_element = MixedElement([VectorElement(P2B3, dim=3), VectorElement(P
 naghdi_shell_FS = FunctionSpace(mesh, naghdi_shell_element)
 
 # %% [markdown]
-# Then, we define `Function`, `TrialFunction` and `TestFunction` objects to express the variational forms and we split
+# Then, we define `Function`, `TrialFunction` and `TestFunction` objects to express the variational
+# forms and we split
 # the mixed function into two subfunctions for displacement and rotation.
 
 # %%
@@ -241,20 +263,24 @@ u_func, theta_func = split(q_func)  # current displacement and rotation
 # - Deformation gradient $\mathbf{F}$
 #
 # $$
-# \mathbf{F} = \nabla \vec{\phi} \quad  (F_{ij} = \frac{\partial \phi_i}{\partial \xi_j}); \quad \vec{\phi} =
+# \mathbf{F} = \nabla \vec{\phi} \quad  (F_{ij} = \frac{\partial \phi_i}{\partial \xi_j});
+# \quad \vec{\phi} =
 # \vec{\phi}_0 +
 # \vec{u} \quad i = 1,2,3; j = 1,2
 # $$
 #
-# - Metric tensor $\mathbf{a} \in \mathbb{S}^2_+$ and curvature tensor $\mathbf{b} \in \mathbb{S}^2$ (First and second
+# - Metric tensor $\mathbf{a} \in \mathbb{S}^2_+$ and curvature tensor $\mathbf{b} \in
+# \mathbb{S}^2$ (First and second
 # fundamental form)
 #
 # $$
 # \mathbf{a} = {\nabla \vec{\phi}} ^{T} \nabla \vec{\phi} \\
-# \mathbf{b} = -\frac{1}{2}({\nabla \vec{\phi}} ^{T} \nabla \vec{d} + {\nabla \vec{d}} ^{T} \nabla \vec{\phi})
+# \mathbf{b} = -\frac{1}{2}({\nabla \vec{\phi}} ^{T} \nabla \vec{d} + {\nabla \vec{d}} ^{T}
+# \nabla \vec{\phi})
 # $$
 #
-# In the initial configuration, $\vec{d} = \vec{n}$, $\vec{\phi} = \vec{\phi}_0$, the conresponding initial tensors are
+# In the initial configuration, $\vec{d} = \vec{n}$, $\vec{\phi} = \vec{\phi}_0$, the conresponding
+# initial tensors are
 # $\mathbf{a}_0$, $\mathbf{b}_0$
 
 # %%
@@ -286,7 +312,8 @@ b0_ufl = -0.5 * (grad(phi0_ufl).T * grad(n0_ufl) + grad(n0_ufl).T * grad(phi0_uf
 #
 # $$
 # \begin{aligned}
-# \vec{\gamma}(\vec{u}, \vec{\theta}) & = {\nabla \vec{\phi}(\vec{u})}^T \vec{d}(\vec{\theta}) - {\nabla\vec{\phi}_0}^T
+# \vec{\gamma}(\vec{u}, \vec{\theta}) & = {\nabla \vec{\phi}(\vec{u})}^T \vec{d}(\vec{\theta})
+# - {\nabla\vec{\phi}_0}^T
 # \vec{n} \\
 # & = {\nabla \vec{\phi}(\vec{u})}^T \vec{d}(\vec{\theta}) \quad \text{if zero initial shears}
 # \end{aligned}
@@ -313,26 +340,31 @@ def gamma(F, d):
 
 # %% [markdown]
 # In curvilinear coordinates, the stiffness modulus of linear isotropic material is defined as:
-# - Membrane stiffness modulus $A^{\alpha\beta\sigma\tau}$, $D^{\alpha\beta\sigma\tau}$ (contravariant components)
+# - Membrane stiffness modulus $A^{\alpha\beta\sigma\tau}$, $D^{\alpha\beta\sigma\tau}$
+# (contravariant components)
 #
 # $$
-# \frac{A^{\alpha\beta\sigma\tau}}t=12\frac{D^{\alpha\beta\sigma\tau}}{t^3}=\frac{2\lambda\mu}{\lambda+2\mu}
-# a_0^{\alpha\beta}a_0^{\sigma\tau}+\mu(a_0^{\alpha\sigma}a_0^{\beta\tau}+a_0^{\alpha\tau}a_0^{\beta\sigma})
+# \frac{A^{\alpha\beta\sigma\tau}}t=12\frac{D^{\alpha\beta\sigma\tau}}{t^3}=
+# \frac{2\lambda\mu}{\lambda+2\mu}
+# a_0^{\alpha\beta}a_0^{\sigma\tau}+\mu(a_0^{\alpha\sigma}a_0^{\beta\tau}+a_0^{\alpha\tau}
+# a_0^{\beta\sigma})
 # $$
 #
 # - Shear stiffness modulus $S^{\alpha\beta}$ (contravariant components)
 #
 # $$
-# \frac{S^{\alpha\beta}}t = \alpha_s \mu a_0^{\alpha\beta} , \quad \alpha_s = \frac{5}{6}: \text{shear factor}
+# \frac{S^{\alpha\beta}}t = \alpha_s \mu a_0^{\alpha\beta} , \quad \alpha_s = \frac{5}{6}:
+# \text{shear factor}
 # $$
 #
-# where $a_0^{\alpha\beta}$ is the contravariant components of the initial metric tensor $\mathbf{a}_0$
+# where $a_0^{\alpha\beta}$ is the contravariant components of the initial metric tensor
+# $\mathbf{a}_0$
 
 # %%
 a0_contra_ufl = ufl.inv(a0_ufl)
 j0_ufl = ufl.det(a0_ufl)
 
-i, j, l, m = ufl.indices(4)
+i, j, l, m = ufl.indices(4)  # noqa: E741
 A_contra_ufl = ufl.as_tensor(
     (
         ((2.0 * lmbda * mu) / (lmbda + 2.0 * mu)) * a0_contra_ufl[i, j] * a0_contra_ufl[l, m]
@@ -373,7 +405,8 @@ M = ufl.as_tensor((t**3 / 12.0) * A_contra_ufl[i, j, l, m] * kappa(F, d)[l, m], 
 T = ufl.as_tensor((t * mu * 5.0 / 6.0) * a0_contra_ufl[i, j] * gamma(F, d)[j], [i])
 
 # %% [markdown]
-# We define elastic strain energy density $\psi_{m}$, $\psi_{b}$, $\psi_{s}$ for membrane, bending and shear,
+# We define elastic strain energy density $\psi_{m}$, $\psi_{b}$, $\psi_{s}$ for membrane, bending
+# and shear,
 # respectively.
 #
 # $$
@@ -392,14 +425,17 @@ psi_b = 0.5 * inner(M, kappa(F, d))
 psi_s = 0.5 * inner(T, gamma(F, d))
 
 # %% [markdown]
-# Shear and membrane locking is treated using the partial reduced selective integration proposed in Arnold and Brezzi
+# Shear and membrane locking is treated using the partial reduced selective integration proposed
+# in Arnold and Brezzi
 # [2].
 #
-# We introduce a parameter $\alpha \in \mathbb{R}$ that splits the membrane and shear energy in the energy functional
+# We introduce a parameter $\alpha \in \mathbb{R}$ that splits the membrane and shear energy
+# in the energy functional
 # into a weighted sum of two parts:
 #
 # $$
-# \begin{aligned}\Pi_{N}(u,\theta)&=\Pi^b(u_h,\theta_h)+\alpha\Pi^m(u_h)+(1-\alpha)\Pi^m(u_h)\\&+\alpha\Pi^s(u_h,\theta_h)
+# \begin{aligned}\Pi_{N}(u,\theta)&=\Pi^b(u_h,\theta_h)+\alpha\Pi^m(u_h)+(1-\alpha)\Pi^m(u_h)\\&+
+# \alpha\Pi^s(u_h,\theta_h)
 # +(1-\alpha)\Pi^s(u_h,\theta_h)-W_{\mathrm{ext}},\end{aligned}
 # $$
 #
@@ -409,7 +445,8 @@ psi_s = 0.5 * inner(T, gamma(F, d))
 # - Optimal choice $\alpha = \frac{t^2}{h^2}$, $h$ is the diameter of the cell
 # - Full integration : Gauss quadrature of degree 4 (6 integral points for triangle)
 # - Reduced integration : Gauss quadrature of degree 2 (3 integral points for triangle).
-#     - While [1] suggests a 1-point reduced integration, we observed that this leads to spurious modes in the present
+#     - While [1] suggests a 1-point reduced integration, we observed that this leads to spurious
+# modes in the present
 # case.
 #
 #
@@ -442,7 +479,8 @@ W_ext = 0.0
 Pi_PSRI -= W_ext
 
 # %% [markdown]
-# The residual and jacobian are the first and second order derivatives of the total potential energy, respectively
+# The residual and jacobian are the first and second order derivatives of the total potential
+# energy,respectively
 
 # %%
 Residual = ufl.derivative(Pi_PSRI, q_func, q_test)
@@ -509,8 +547,10 @@ bc_symm_theta = dirichletbc(theta_clamped, symm_dofs_theta, naghdi_shell_FS.sub(
 bcs = [bc_clamped_u, bc_clamped_theta, bc_symm_u, bc_symm_theta]
 
 # %% [markdown]
-# The loading is exerted by a point force along the $z$ direction applied at the midpoint of the bottom boundary.
-# Since `PointSource` function is not available by far in new FEniCSx, we achieve the same functionality according
+# The loading is exerted by a point force along the $z$ direction applied at the midpoint of the
+# bottom boundary.
+# Since `PointSource` function is not available by far in new FEniCSx, we achieve the same
+# functionality according
 # to the reply in [4]
 
 # %%
@@ -569,7 +609,7 @@ class NonlinearProblemPointSource(NonlinearProblem):
         self,
         F: ufl.form.Form,
         u: _Function,
-        bcs: typing.List[DirichletBC] = [],
+        bcs: typing.List[DirichletBC] = [],  # noqa: UP006
         J: ufl.form.Form = None,
         cells=[],
         basis_values=[],
@@ -627,7 +667,8 @@ opts[f"{option_prefix}pc_factor_mat_solver_type"] = "mumps"
 ksp.setFromOptions()
 
 # %% [markdown]
-# Finally, we can solve the quasi-static problem, incrementally increasing the loading from 0 to $2000N$
+# Finally, we can solve the quasi-static problem, incrementally increasing the loading from 0 to
+# $2000N$
 
 # %%
 PS_diff = 50.0
@@ -662,7 +703,8 @@ for i in range(1, n_step + 1):
                 break
 
 # %% [markdown]
-# We write the outputs of $\vec{u}$, $\vec{\theta}$, and $\vec{\phi}$ in the second order Lagrange space.
+# We write the outputs of $\vec{u}$, $\vec{\theta}$, and $\vec{\phi}$ in the second order
+# Lagrange space.
 
 # %%
 # interpolate phi_ufl into CG2 Space
@@ -692,8 +734,10 @@ with dolfinx.io.VTXWriter(mesh.comm, results_folder / "phi_naghdi.bp", [phi_func
     vtx.write(0)
 
 # %% [markdown]
-# The results for the transverse displacement at the point of application of the force are validated against a standard
-# reference from the literature, obtained using Abaqus S4R element and a structured mesh of 40×40 elements, see [1]:
+# The results for the transverse displacement at the point of application of the force are
+# validated against a standard
+# reference from the literature, obtained using Abaqus S4R element and a structured mesh of
+# 40 times 40 elements, see [1]:
 
 # %%
 if mesh.comm.rank == 0:
@@ -768,14 +812,18 @@ if mesh.comm.rank == 0:
 # %% [markdown]
 # References:
 #
-# [1] K. Sze, X. Liu, and S. Lo. Popular benchmark problems for geometric nonlinear analysis of shells. Finite Elements
-# in Analysis and Design, 40(11):1551 – 1569, 2004.
+# [1] K. Sze, X. Liu, and S. Lo. Popular benchmark problems for geometric nonlinear analysis of
+# shells.
+# Finite Elements
+# in Analysis and Design, 40(11):1551 - 1569, 2004.
 #
 # [2] D. Arnold and F.Brezzi, Mathematics of Computation, 66(217): 1-14, 1997.
 # https://www.ima.umn.edu/~arnold//papers/shellelt.pdf
 #
-# [3] P. Betsch, A. Menzel, and E. Stein. On the parametrization of finite rotations in computational mechanics:
-# A classification of concepts with application to smooth shells. Computer Methods in Applied Mechanics and Engineering,
-# 155(3):273 – 305, 1998.
+# [3] P. Betsch, A. Menzel, and E. Stein. On the parametrization of finite rotations in
+# computational mechanics:
+# A classification of concepts with application to smooth shells. Computer Methods in Applied
+# Mechanics and Engineering,
+# 155(3):273 - 305, 1998.
 #
 # [4] https://fenicsproject.discourse.group/t/point-sources-redux/13496/4
