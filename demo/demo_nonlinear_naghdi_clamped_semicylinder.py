@@ -42,7 +42,7 @@ from dolfinx.fem.function import Function as _Function
 from dolfinx.fem.petsc import NonlinearProblem, apply_lifting, assemble_vector, set_bc
 from dolfinx.mesh import CellType, create_rectangle, locate_entities_boundary
 from dolfinx.nls.petsc import NewtonSolver
-from ufl import FiniteElement, MixedElement, VectorElement, grad, inner, split
+from ufl import MixedElement, VectorElement, grad, inner, split
 
 # %% [markdown]
 # We consider a semi-cylindrical shell of radius $r$ and axis length $L$. The shell is made of a
@@ -236,8 +236,8 @@ def director(R0, theta):
 #
 # %%
 # for the 3 translation DOFs, we use the P2 + B3 enriched element
-P2 = FiniteElement("Lagrange", ufl.triangle, degree=2)
-B3 = FiniteElement("Bubble", ufl.triangle, degree=3)
+P2 = ufl.FiniteElement("Lagrange", ufl.triangle, degree=2)
+B3 = ufl.FiniteElement("Bubble", ufl.triangle, degree=3)
 # Enriched
 P2B3 = P2 + B3
 # for 2 rotation DOFs, we use P2 element
@@ -460,7 +460,7 @@ dx_r = ufl.Measure("dx", domain=mesh, metadata={"quadrature_degree": 2})
 
 # Calculate the factor alpha as a function of the mesh size h
 h = ufl.CellDiameter(mesh)
-alpha_FS = FunctionSpace(mesh, FiniteElement("DG", ufl.triangle, 0))
+alpha_FS = FunctionSpace(mesh, ufl.FiniteElement("DG", ufl.triangle, 0))
 alpha_expr = Expression(t**2 / h**2, alpha_FS.element.interpolation_points())
 alpha = Function(alpha_FS)
 alpha.interpolate(alpha_expr)
