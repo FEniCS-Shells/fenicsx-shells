@@ -14,26 +14,18 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    container: ghcr.io/fenics/dolfinx/dolfinx:v0.7.2
+    container: ghcr.io/fenics/dolfinx/dolfinx:nightly
     steps:
       - name: Checkout
         uses: actions/checkout@v3
       
-      - name: Flake8 checks
+      - name: ruff checks
         run: |
-          python3 -m flake8 fenicsx_shells
-          cd demo && python3 -m flake8 . && cd ../
-          python3 -m flake8 test
-      - name: isort checks (non-blocking)
-        continue-on-error: true
-        run: |
-          python3 -m isort --check fenicsx_shells
-          python3 -m isort --check demo
-          python3 -m isort --check test
+          ruff check .
+          ruff format --check .
       
       - name: Install FEniCSx-Shells
         run: |
-          pip install scikit-build-core[pyproject] # TO REMOVE ONCE 0.8.0 RELEASED
           python3 -m pip install --no-build-isolation --check-build-dependencies .
 
       - name: Build documentation

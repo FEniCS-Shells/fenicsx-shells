@@ -37,18 +37,17 @@
 # PETSc.
 
 # +
+from mpi4py import MPI
+
 import numpy as np
 
-from basix.ufl import element, mixed_element
 import dolfinx
 import ufl
-from dolfinx.fem import Function, functionspace, dirichletbc
+from basix.ufl import element, mixed_element
+from dolfinx.fem import Function, dirichletbc, functionspace
 from dolfinx.fem.petsc import LinearProblem
 from dolfinx.mesh import CellType, create_unit_square
-from ufl import (FacetNormal, Identity, Measure,
-                 grad, inner, split, sym, tr)
-
-from mpi4py import MPI
+from ufl import FacetNormal, Identity, Measure, grad, inner, split, sym, tr
 
 # -
 

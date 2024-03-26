@@ -35,18 +35,17 @@
 # We begin by importing the necessary functionality from DOLFINx, UFL and
 # PETSc.
 
+from mpi4py import MPI
+
 import numpy as np
 
-from basix.ufl import element, mixed_element
 import dolfinx
 import ufl
-from dolfinx.fem import functionspace, dirichletbc
+from basix.ufl import element, mixed_element
+from dolfinx.fem import dirichletbc, functionspace
 from dolfinx.fem.petsc import LinearProblem
 from dolfinx.mesh import CellType, create_unit_square
-from ufl import (FacetNormal, Identity, Measure,
-                 grad, inner, sym, tr)
-
-from mpi4py import MPI
+from ufl import FacetNormal, Identity, Measure, grad, inner, sym, tr
 
 # We then create a two-dimensional mesh of the mid-plane of the plate $\Omega =
 # [0, 1] \times [0, 1]$.

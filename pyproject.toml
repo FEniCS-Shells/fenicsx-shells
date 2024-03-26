@@ -4,15 +4,49 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "fenicsx-shells"
-version = "0.1.0.dev0"
+version = "0.8.0.dev0"
 description = "FEniCSx-Shells"
 readme = "README.md"
-requires-python = ">=3.8.0"
+requires-python = ">=3.9.0"
 license = { file = "COPYING.LESSER" }
 authors = [
       { email = "jack.hale@uni.lu" },
       { name = "Jack S. Hale" },
 ]
 dependencies = [
-      "fenics-dolfinx>=0.7.2,<0.8.0",
+      "fenics-dolfinx>=0.8.0.dev0,<0.9.0",
 ]
+
+[tool.ruff]
+line-length = 100
+indent-width = 4
+
+[tool.ruff.lint]
+select = [
+      "E", # pycodestyle
+      "W", # pycodestyle
+      "F", # pyflakes
+      "I",   # isort - use standalone isort
+      "RUF", # Ruff-specific rules
+      "UP",  # pyupgrade
+      "ICN", # flake8-import-conventions
+      "NPY", # numpy-specific rules
+      "FLY", # use f-string not static joins
+]
+ignore = ["UP007", "RUF012"]
+allowed-confusables = ["σ"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["basix", "dolfinx", "ffcx", "ufl"]
+known-third-party = ["gmsh", "numba", "numpy", "pytest", "pyvista"]
+section-order = [
+      "future",
+      "standard-library",
+      "mpi",
+      "third-party",
+      "first-party",
+      "local-folder",
+]
+
+[tool.ruff.lint.isort.sections]
+"mpi" = ["mpi4py", "petsc4py"]
