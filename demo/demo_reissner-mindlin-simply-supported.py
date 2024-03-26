@@ -27,17 +27,17 @@
 # We begin by importing the necessary functionality from DOLFINx, UFL and
 # PETSc.
 
+from mpi4py import MPI
+
 import numpy as np
 
-from basix.ufl import element, mixed_element
 import dolfinx
 import ufl
-from dolfinx.fem import Function, functionspace, dirichletbc
+from basix.ufl import element, mixed_element
+from dolfinx.fem import Function, dirichletbc, functionspace
 from dolfinx.fem.petsc import LinearProblem
 from dolfinx.mesh import CellType, create_unit_square
 from ufl import dx, grad, inner, split, sym, tr
-
-from mpi4py import MPI
 
 # We then create a two-dimensional mesh of the mid-plane of the plate $\Omega =
 # [0, 1] \times [0, 1]$. `GhostMode.shared_facet` is required as the Form will
@@ -100,7 +100,8 @@ t = 0.001
 # function of the bending strain tensor $k$
 #
 # $$
-# \psi_b(k) = \frac{1}{2} D \left( (1 - \nu) \, \mathrm{tr}\,(k^2) + \nu \, (\mathrm{tr}    \,k)^2 \right) \qquad
+# \psi_b(k) = \frac{1}{2} D \left( (1 - \nu) \, \mathrm{tr}\,(k^2)
+#             + \nu \, (\mathrm{tr}    \,k)^2 \right) \qquad
 # D = \frac{Et^3}{12(1 - \nu^2)}
 # $$
 #

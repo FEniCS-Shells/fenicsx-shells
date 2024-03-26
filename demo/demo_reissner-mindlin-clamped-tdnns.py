@@ -15,8 +15,8 @@
 # conditions using the TDNNS (tangential displacement normal-normal stress)
 # element developed in:
 #
-# Pechstein, A. S., Schöberl, J. The TDNNS method for Reissner–Mindlin plates.
-# Numer. Math. 137, 713–740 (2017).
+# Pechstein, A. S., Schöberl, J. The TDNNS method for Reissner-Mindlin plates.
+# Numer. Math. 137, 713-740 (2017).
 # [doi:10.1007/s00211-017-0883-9](https://doi.org/10.1007/s00211-017-0883-9)
 #
 # The idea behind this element construction is that the rotations, transverse

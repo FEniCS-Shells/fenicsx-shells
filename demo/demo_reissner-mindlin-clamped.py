@@ -101,7 +101,8 @@ t = 0.001
 # function of the bending strain tensor $k$
 #
 # $$
-# \psi_b(k) = \frac{1}{2} D \left( (1 - \nu) \, \mathrm{tr}\,(k^2) + \nu \, (\mathrm{tr}    \,k)^2 \right) \qquad
+# \psi_b(k) = \frac{1}{2} D \left( (1 - \nu) \, \mathrm{tr}\,(k^2)
+#             + \nu \, (\mathrm{tr}    \,k)^2 \right) \qquad
 # D = \frac{Et^3}{12(1 - \nu^2)}
 # $$
 #
