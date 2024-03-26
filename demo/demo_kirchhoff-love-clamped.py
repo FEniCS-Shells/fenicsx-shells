@@ -35,17 +35,17 @@
 # We begin by importing the necessary functionality from DOLFINx, UFL and
 # PETSc.
 
+from mpi4py import MPI
+
 import numpy as np
 
 import dolfinx
 import ufl
-from dolfinx.fem import FunctionSpace, dirichletbc
+from basix.ufl import element, mixed_element
+from dolfinx.fem import dirichletbc, functionspace
 from dolfinx.fem.petsc import LinearProblem
 from dolfinx.mesh import CellType, create_unit_square
-from ufl import (FacetNormal, FiniteElement, Identity, Measure, MixedElement,
-                 grad, inner, sym, tr)
-
-from mpi4py import MPI
+from ufl import FacetNormal, Identity, Measure, grad, inner, sym, tr
 
 # We then create a two-dimensional mesh of the mid-plane of the plate $\Omega =
 # [0, 1] \times [0, 1]$.
@@ -65,9 +65,10 @@ mesh = create_unit_square(MPI.COMM_WORLD, 16, 16, CellType.triangle)
 
 # +
 k = 2
-U_el = MixedElement([FiniteElement("Lagrange", ufl.triangle, k + 1),
-                     FiniteElement("HHJ", ufl.triangle, k)])
-U = FunctionSpace(mesh, U_el)
+U_el = mixed_element(
+    [element("Lagrange", mesh.basix_cell(), k + 1), element("HHJ", mesh.basix_cell(), k)]
+)
+U = functionspace(mesh, U_el)
 
 w, M = ufl.TrialFunctions(U)
 w_t, M_t = ufl.TestFunctions(U)
@@ -148,7 +149,7 @@ def k_theta(theta):
 
 def k_M(M):
     """Bending strain tensor in terms of bending moments"""
-    return (12.0/(E*t**3))*((1.0 + nu)*M - nu*Identity(2)*tr(M))
+    return (12.0 / (E * t**3)) * ((1.0 + nu) * M - nu * Identity(2) * tr(M))
 
 
 def nn(M):
@@ -163,14 +164,16 @@ def inner_divdiv(M, theta):
     """Discrete div-div inner product"""
     n = FacetNormal(M.ufl_domain())
     M_nn = nn(M)
-    result = -inner(M, k_theta(theta))*dx + inner(M_nn("+"),
-                                                  ufl.jump(theta, n))*dS + inner(M_nn, ufl.dot(theta, n))*ds
+    result = (
+        -inner(M, k_theta(theta)) * dx
+        + inner(M_nn("+"), ufl.jump(theta, n)) * dS
+        + inner(M_nn, ufl.dot(theta, n)) * ds
+    )
     return result
 
 
-a = inner(k_M(M), M_t)*dx + inner_divdiv(M_t, theta(w)) + \
-    inner_divdiv(M, theta(w_t))
-L = -inner(t**3, w_t)*dx
+a = inner(k_M(M), M_t) * dx + inner_divdiv(M_t, theta(w)) + inner_divdiv(M, theta(w_t))
+L = -inner(t**3, w_t) * dx
 
 
 def all_boundary(x):
@@ -187,15 +190,14 @@ def all_boundary(x):
 # TODO: Add table like TDNNS example.
 
 # +
-boundary_entities = dolfinx.mesh.locate_entities_boundary(
-    mesh, mesh.topology.dim - 1, all_boundary)
+boundary_entities = dolfinx.mesh.locate_entities_boundary(mesh, mesh.topology.dim - 1, all_boundary)
 
 bcs = []
 # Transverse displacement
 boundary_dofs_displacement = dolfinx.fem.locate_dofs_topological(
-    U.sub(0), mesh.topology.dim - 1, boundary_entities)
-bcs.append(dirichletbc(np.array(0.0, dtype=np.float64),
-           boundary_dofs_displacement, U.sub(0)))
+    U.sub(0), mesh.topology.dim - 1, boundary_entities
+)
+bcs.append(dirichletbc(np.array(0.0, dtype=np.float64), boundary_dofs_displacement, U.sub(0)))
 
 
 # -
@@ -204,15 +206,18 @@ bcs.append(dirichletbc(np.array(0.0, dtype=np.float64),
 # centre of the plate.
 
 # +
-problem = LinearProblem(a, L, bcs=bcs, petsc_options={
-                        "ksp_type": "preonly", "pc_type": "lu", "pc_factor_mat_solver_type": "mumps"})
+problem = LinearProblem(
+    a,
+    L,
+    bcs=bcs,
+    petsc_options={"ksp_type": "preonly", "pc_type": "lu", "pc_factor_mat_solver_type": "mumps"},
+)
 u_h = problem.solve()
 
 bb_tree = dolfinx.geometry.bb_tree(mesh, 2)
 point = np.array([[0.5, 0.5, 0.0]], dtype=np.float64)
 cell_candidates = dolfinx.geometry.compute_collisions_points(bb_tree, point)
-cells = dolfinx.geometry.compute_colliding_cells(
-    mesh, cell_candidates, point)
+cells = dolfinx.geometry.compute_colliding_cells(mesh, cell_candidates, point)
 
 w, M = u_h.split()
 
