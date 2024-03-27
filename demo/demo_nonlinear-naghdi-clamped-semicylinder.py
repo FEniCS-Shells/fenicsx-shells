@@ -123,12 +123,14 @@ n0_ufl = unit_normal(phi0_ufl)
 #
 # A convienient choice of $\vec{t}_{01}$ and $\vec{t}_{02}$ (when $\vec{n}
 # \nparallel \vec{e}_2 $) could be:
+#
 # $$
 # \vec{t}_{01} = \frac{\vec{e}_2 \times \vec{n}}{\| \vec{e}_2 \times \vec{n}\|} \\
 # \vec{t}_{02} =   \vec{n} \times \vec{t}_{01}
 # $$
 #
 # The corresponding rotation matrix $\mathbf{R}_0$:
+#
 # $$
 # \mathbf{R}_0 = [\vec{t}_{01}; \vec{t}_{02}; \vec{n}]
 # $$
@@ -180,10 +182,10 @@ R0_ufl = rotation_matrix(t1_ufl, t2_ufl, n0_ufl)
 # The rotation matrix $\mathbf{R}$ represents three successive rotations:
 # - First one: the initial rotation matrix $\mathbf{R}_0$
 # - Second one :$\text{exp}[\theta_2 \hat{\mathbf{t}}_{02}]$ rotates a vector
-# about the axis $\vec{t}_{02}$ of $\theta_2$ angle; - Third one :
-# $\text{exp}[\theta_1 \hat{\mathbf{t}}_1]$ rotates a vector about the axis
-# $\vec{t}_{1}$ of $\theta_1$ angle, and $\vec{t}_1 = \text{exp}[\theta_2
-# \hat{\mathbf{t}}_{02}] \vec{t}_{01}$
+# about the axis $\vec{t}_{02}$ of $\theta_2$ angle;
+# - Third one : $\text{exp}[\theta_1 \hat{\mathbf{t}}_1]$ rotates a vector
+# about the axis $\vec{t}_{1}$ of $\theta_1$ angle, and $\vec{t}_1 = \text{exp}
+# [\theta_2\hat{\mathbf{t}}_{02}] \vec{t}_{01}$
 #
 # The rotation matrix $\mathbf{R}$ on the other hand it is equivalent to rotate
 # around the fixed axis $\vec{e}_1$ and $\vec{e}_2$ (Proof see [3]):
@@ -218,10 +220,12 @@ def director(R0, theta):
 
 # %% [markdown]
 # In our 5-parameter Naghdi shell model the configuration of the shell is
-# assigned by: - the 3-component vector field $\vec{u}$ representing the
-# displacement with respect to the initial configuration $\vec{\phi}_0$ - the
-# 2-component vector field $\vec{\theta}$ representing the angle variation of
-# the director $\vec{d}$ with respect to initial unit normal $\vec{n}$
+# assigned by:
+# - the 3-component vector field $\vec{u}$ representing the
+# displacement with respect to the initial configuration $\vec{\phi}_0$
+# - the 2-component vector field $\vec{\theta}$ representing the angle
+# variation of the director $\vec{d}$ with respect to initial unit normal
+# $\vec{n}$
 #
 # %% [markdown]
 # Following [1], we use a $[P_2 + B_3]^3$ element for $\vec{u}$ and a $[P_2]^2$
@@ -268,9 +272,11 @@ u_func, theta_func = split(q_func)  # current displacement and rotation
 # $\mathbf{b} \in \mathbb{S}^2$ (First and second fundamental form)
 #
 # $$
-# \mathbf{a} = {\nabla \vec{\phi}} ^{T} \nabla \vec{\phi} \\
-# \mathbf{b} = -\frac{1}{2}({\nabla \vec{\phi}} ^{T} \nabla \vec{d} + {\nabla \vec{d}} ^{T}
+# \begin{aligned}
+# \mathbf{a} &= {\nabla \vec{\phi}} ^{T} \nabla \vec{\phi} \\
+# \mathbf{b} &= -\frac{1}{2}({\nabla \vec{\phi}} ^{T} \nabla \vec{d} + {\nabla \vec{d}} ^{T}
 # \nabla \vec{\phi})
+# \end{aligned}
 # $$
 #
 # In the initial configuration, $\vec{d} = \vec{n}$, $\vec{\phi} =
@@ -335,8 +341,9 @@ def gamma(F, d):
 # In curvilinear coordinates, the stiffness modulus of linear isotropic
 # material is defined as:
 #
-# - Membrane stiffness modulus $A^{\alpha\beta\sigma\tau}$,
-# $D^{\alpha\beta\sigma\tau}$ (contravariant components)
+# - Membrane and bending stiffness modulus $A^{\alpha\beta\sigma\tau}$,
+# $D^{\alpha\beta\sigma\tau}$
+# (contravariant components)
 #
 # $$
 # \frac{A^{\alpha\beta\sigma\tau}}t=12\frac{D^{\alpha\beta\sigma\tau}}{t^3}=
