@@ -67,6 +67,7 @@ along with the appropriate general [FEniCS citations](http://fenicsproject.org/c
 ## Authors
 
 Jack S. Hale, University of Luxembourg, Luxembourg.
+Tian Yang, EPFL, Switzerland.
 
 FEniCSx-Shells contains code from the original FEniCS-Shells project
 hosted on [BitBucket](https://bitbucket.org/unilucompmech/fenics-shells).
