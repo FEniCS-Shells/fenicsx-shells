@@ -1,7 +1,7 @@
 # %% [markdown]
 # # Clamped semi-cylindrical Naghdi shell under point load
 #
-# ## Authors: Tian Yang (FEniCSx-Shells), Matteo Brunetti (FEniCS-Shells)
+# ### Authors: Tian Yang (FEniCSx-Shells), Matteo Brunetti (FEniCS-Shells)
 #
 # %% [markdown]
 # This demo program solves the nonlinear Naghdi shell equations for a
@@ -94,6 +94,7 @@ tdim = mesh.topology.dim  # = 2
 x = ufl.SpatialCoordinate(mesh)
 phi0_ufl = ufl.as_vector([r * ufl.sin(x[0]), x[1], r * ufl.cos(x[0])])
 
+
 # %% [markdown]
 # Given the analytical expression of midplane, we define the unit normal as
 # below:
@@ -104,14 +105,14 @@ phi0_ufl = ufl.as_vector([r * ufl.sin(x[0]), x[1], r * ufl.cos(x[0])])
 # $$
 #
 # %%
-
-
 def unit_normal(phi):
     n = ufl.cross(phi.dx(0), phi.dx(1))
     return n / ufl.sqrt(inner(n, n))
 
 
 n0_ufl = unit_normal(phi0_ufl)
+
+
 # %% [markdown]
 # We define a local orthonormal frame $\{\vec{t}_{01}, \vec{t}_{02}, \vec{n}\}$
 # of the initial configuration $\phi_0$ by rotating the global Cartesian basis
@@ -134,8 +135,6 @@ n0_ufl = unit_normal(phi0_ufl)
 # $$
 #
 # %%
-
-
 def tangent_1(n):
     e2 = ufl.as_vector([0, 1, 0])
     t1 = ufl.cross(e2, n)
@@ -161,6 +160,8 @@ def rotation_matrix(t1, t2, n):
 
 
 R0_ufl = rotation_matrix(t1_ufl, t2_ufl, n0_ufl)
+
+
 # %% [markdown]
 # The kinematics of the Nadghi shell model is defined by the following vector
 # fields:
@@ -203,8 +204,6 @@ R0_ufl = rotation_matrix(t1_ufl, t2_ufl, n0_ufl)
 # Note: the above formular becomes singular when $\theta_1 = \pm \pi/2, ...$, (See Chapter 4.2.1 in
 # [3] for details)
 # %%
-
-
 def director(R0, theta):
     """Updates the director with two successive elementary rotations"""
     Lm3 = ufl.as_vector(
@@ -316,9 +315,8 @@ b0_ufl = -0.5 * (grad(phi0_ufl).T * grad(n0_ufl) + grad(n0_ufl).T * grad(phi0_uf
 # $$
 #
 
+
 # %%
-
-
 def epsilon(F):
     """Membrane strain"""
     return 0.5 * (F.T * F - a0_ufl)
@@ -336,9 +334,10 @@ def gamma(F, d):
 
 # %% [markdown]
 # In curvilinear coordinates, the stiffness modulus of linear isotropic
-# material is defined as: - Membrane stiffness modulus
-# $A^{\alpha\beta\sigma\tau}$, $D^{\alpha\beta\sigma\tau}$ (contravariant
-# components)
+# material is defined as:
+#
+# - Membrane stiffness modulus $A^{\alpha\beta\sigma\tau}$,
+# $D^{\alpha\beta\sigma\tau}$ (contravariant components)
 #
 # $$
 # \frac{A^{\alpha\beta\sigma\tau}}t=12\frac{D^{\alpha\beta\sigma\tau}}{t^3}=
@@ -472,16 +471,15 @@ Pi_PSRI -= W_ext
 # total potential energy, respectively
 
 # %%
-Residual = ufl.derivative(Pi_PSRI, q_func, q_test)
-Jacobian = ufl.derivative(Residual, q_func, q_trial)
+F = ufl.derivative(Pi_PSRI, q_func, q_test)
+J = ufl.derivative(F, q_func, q_trial)
+
 
 # %% [markdown]
 # Next, we prescribe the dirichlet boundary conditions:
 # - fully clamped boundary conditions on the top boundary ($\xi_2 = 0$):
 # - $u_{1,2,3} = \theta_{1,2} = 0$
 # %%
-
-
 def clamped_boundary(x):
     return np.isclose(x[1], 0.0)
 
@@ -509,9 +507,8 @@ bc_clamped_theta = dirichletbc(theta_clamped, clamped_dofs_theta, naghdi_shell_F
 # \pi/2$):
 # - $u_3 = \theta_2 = 0$
 
+
 # %%
-
-
 def symm_boundary(x):
     return np.isclose(abs(x[0]), np.pi / 2)
 
@@ -530,14 +527,13 @@ bc_symm_theta = dirichletbc(theta_clamped, symm_dofs_theta, naghdi_shell_FS.sub(
 
 bcs = [bc_clamped_u, bc_clamped_theta, bc_symm_u, bc_symm_theta]
 
+
 # %% [markdown]
 # The loading is exerted by a point force along the $z$ direction applied at
 # the midpoint of the bottom boundary.
 # Since `PointSource` function is not available by far in new FEniCSx, we
 # achieve the same functionality according to the method detailed in [4].
 # %%
-
-
 def compute_cell_contributions(V, points):
     """Returns the cell containing points and the values of the basis functions
     at that point"""
@@ -580,12 +576,11 @@ else:
 
 cells, basis_values = compute_cell_contributions(naghdi_shell_FS, points)
 
+
 # %% [markdown]
 # We define a custom `NonlinearProblem` which is able to include the point
 # force.
 # %%
-
-
 class NonlinearProblemPointSource(NonlinearProblem):
     def __init__(
         self,
@@ -626,7 +621,7 @@ class NonlinearProblemPointSource(NonlinearProblem):
 # We use the standard Newton iteration.
 
 # %%
-problem = NonlinearProblemPointSource(Residual, q_func, bcs, Jacobian, cells, basis_values)
+problem = NonlinearProblemPointSource(F, q_func, bcs, J, cells, basis_values)
 
 solver = NewtonSolver(mesh.comm, problem)
 
@@ -648,7 +643,6 @@ ksp.setFromOptions()
 # %% [markdown]
 # Finally, we can solve the quasi-static problem, incrementally increasing the
 # loading from $0$N to $2000$N
-
 # %%
 PS_diff = 50.0
 n_step = 40
@@ -684,7 +678,6 @@ for i in range(1, n_step + 1):
 # %% [markdown]
 # We write the outputs of $\vec{u}$, $\vec{\theta}$, and $\vec{\phi}$ in the
 # second order Lagrange space.
-
 # %%
 # Interpolate phi_ufl into CG2 Space
 u_P2B3 = q_func.sub(0).collapse()
@@ -720,7 +713,7 @@ with dolfinx.io.VTXWriter(mesh.comm, results_folder / "phi_naghdi.bp", [phi_func
 
 # %%
 if mesh.comm.rank == 0:
-    fig = plt.figure(figsize=(8, 6))
+    fig = plt.figure()
     reference_u3 = 1.0e-2 * np.array(
         [
             0.0,
@@ -787,7 +780,8 @@ if mesh.comm.rank == 0:
     plt.ylabel("Load (N)")
     plt.legend()
     plt.grid()
-    plt.savefig(results_folder / "comparisons.png")
+    plt.tight_layout()
+    plt.savefig(results_folder / "comparisons.pdf")
 
 # %% [markdown]
 # References:
