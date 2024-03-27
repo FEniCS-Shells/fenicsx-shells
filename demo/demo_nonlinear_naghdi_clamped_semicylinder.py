@@ -1,7 +1,7 @@
 # %% [markdown]
 # # Clamped semi-cylindrical Naghdi shell under point load
 #
-# ### Authors: Tian Yang (FEniCSx-Shells), Matteo Brunetti (FEniCS-Shells)
+# Authors: Tian Yang (FEniCSx-Shells), Matteo Brunetti (FEniCS-Shells)
 #
 # %% [markdown]
 # This demo program solves the nonlinear Naghdi shell equations for a
@@ -64,7 +64,6 @@ E, nu = 2.0685e7, 0.3
 mu = E / (2.0 * (1.0 + nu))
 lmbda = 2.0 * mu * nu / (1.0 - 2.0 * nu)
 t = 0.03
-#
 # %% [markdown]
 # The midplane of the initial (stress-free) configuration $\vec{\phi_0}$ of the
 # shell is given in the form of an analytical expression:
@@ -78,7 +77,7 @@ t = 0.03
 # respectively.
 #
 # %% [markdown]
-# We generate a mesh in the $(\xi_1, \xi_2)$ space with triangular elements
+# We generate a mesh in the $(\xi_1, \xi_2)$ space with quadrilateral cells
 #
 # %%
 mesh = create_rectangle(
