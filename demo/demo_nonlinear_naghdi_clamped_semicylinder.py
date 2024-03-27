@@ -37,10 +37,12 @@ from petsc4py import PETSc
 import matplotlib.pyplot as plt
 import numpy as np
 
-# %%
 import dolfinx
 import ufl
-from dolfinx.fem import Expression, Function, FunctionSpace, dirichletbc, locate_dofs_topological
+
+# %%
+from basix.ufl import blocked_element, element, enriched_element, mixed_element
+from dolfinx.fem import Expression, Function, dirichletbc, functionspace, locate_dofs_topological
 from dolfinx.fem.bcs import DirichletBC
 from dolfinx.fem.function import Function as _Function
 from dolfinx.fem.petsc import NonlinearProblem, apply_lifting, assemble_vector, set_bc
@@ -82,8 +84,7 @@ t = 0.03
 mesh = create_rectangle(
     MPI.COMM_WORLD, np.array([[-np.pi / 2, 0], [np.pi / 2, L]]), [20, 20], CellType.triangle
 )
-# topology dimension = 2
-tdim = mesh.topology.dim
+tdim = mesh.topology.dim  # = 2
 
 # %% [markdown]
 # We provide the analytical expression of the initial shape as a `ufl`
@@ -184,7 +185,7 @@ R0_ufl = rotation_matrix(t1_ufl, t2_ufl, n0_ufl)
 # $\vec{t}_{1}$ of $\theta_1$ angle, and $\vec{t}_1 = \text{exp}[\theta_2
 # \hat{\mathbf{t}}_{02}] \vec{t}_{01}$
 #
-# The rotation matrix $\mathbf{R}$ on the other hand is equivalent to rotate
+# The rotation matrix $\mathbf{R}$ on the other hand it is equivalent to rotate
 # around the fixed axis $\vec{e}_1$ and $\vec{e}_2$ (Proof see [3]):
 #
 # $$
@@ -230,14 +231,15 @@ def director(R0, theta):
 # [\vec{u}, \vec{\theta}]$:
 #
 # %%
-P2 = ufl.FiniteElement("Lagrange", ufl.triangle, degree=2)
-B3 = ufl.FiniteElement("Bubble", ufl.triangle, degree=3)
-P2B3 = P2 + B3
+cell = mesh.basix_cell()
+P2 = element("Lagrange", cell, degree=2)
+B3 = element("Bubble", cell, degree=3)
+P2B3 = enriched_element([P2, B3])
 
-naghdi_shell_element = ufl.MixedElement(
-    [ufl.VectorElement(P2B3, dim=3), ufl.VectorElement(P2, dim=2)]
+naghdi_shell_element = mixed_element(
+    [blocked_element(P2B3, shape=(3,)), blocked_element(P2, shape=(2,))]
 )
-naghdi_shell_FS = FunctionSpace(mesh, naghdi_shell_element)
+naghdi_shell_FS = functionspace(mesh, naghdi_shell_element)
 
 # %% [markdown]
 # Then, we define `Function`, `TrialFunction` and `TestFunction` objects to
@@ -317,18 +319,18 @@ b0_ufl = -0.5 * (grad(phi0_ufl).T * grad(n0_ufl) + grad(n0_ufl).T * grad(phi0_uf
 # %%
 
 
-# membrane strain
 def epsilon(F):
+    """Membrane strain"""
     return 0.5 * (F.T * F - a0_ufl)
 
 
-# bending strain
 def kappa(F, d):
+    """Bending strain"""
     return -0.5 * (F.T * grad(d) + grad(d).T * F) - b0_ufl
 
 
-# transverse shear strain (zero initial shear strain)
 def gamma(F, d):
+    """Transverse shear strain"""
     return F.T * d
 
 
@@ -447,7 +449,7 @@ dx_r = ufl.Measure("dx", domain=mesh, metadata={"quadrature_degree": 2})
 
 # Calculate the factor alpha as a function of the mesh size h
 h = ufl.CellDiameter(mesh)
-alpha_FS = FunctionSpace(mesh, ufl.FiniteElement("DG", ufl.triangle, 0))
+alpha_FS = functionspace(mesh, element("DG", cell, 0))
 alpha_expr = Expression(t**2 / h**2, alpha_FS.element.interpolation_points())
 alpha = Function(alpha_FS)
 alpha.interpolate(alpha_expr)
@@ -480,7 +482,6 @@ Jacobian = ufl.derivative(Residual, q_func, q_trial)
 # %%
 
 
-# Clamped boundary condition
 def clamped_boundary(x):
     return np.isclose(x[1], 0.0)
 
@@ -538,6 +539,8 @@ bcs = [bc_clamped_u, bc_clamped_theta, bc_symm_u, bc_symm_theta]
 
 
 def compute_cell_contributions(V, points):
+    """Returns the cell containing points and the values of the basis functions
+    at that point"""
     # Determine what process owns a point and what cells it lies within
     mesh = V.mesh
     _, _, owning_points, cells = dolfinx.cpp.geometry.determine_point_ownership(
@@ -547,7 +550,7 @@ def compute_cell_contributions(V, points):
 
     # Pull owning points back to reference cell
     mesh_nodes = mesh.geometry.x
-    cmap = mesh.geometry.cmaps[0]
+    cmap = mesh.geometry.cmap
     ref_x = np.zeros((len(cells), mesh.geometry.dim), dtype=mesh.geometry.x.dtype)
     for i, (point, cell) in enumerate(zip(owning_points, cells)):
         geom_dofs = mesh.geometry.dofmap[cell]
@@ -576,8 +579,6 @@ else:
     points = np.zeros((0, 3), dtype=mesh.geometry.x.dtype)
 
 cells, basis_values = compute_cell_contributions(naghdi_shell_FS, points)
-# cells: the cells that contain the points basis_values: the basis function
-# values at the points
 
 # %% [markdown]
 # We define a custom `NonlinearProblem` which is able to include the point
@@ -603,7 +604,6 @@ class NonlinearProblemPointSource(NonlinearProblem):
         self.function_space = u.function_space
 
     def F(self, x: PETSc.Vec, b: PETSc.Vec) -> None:
-        # Reset the residual vector
         with b.localForm() as b_local:
             b_local.set(0.0)
         assemble_vector(b, self._L)
@@ -616,7 +616,7 @@ class NonlinearProblemPointSource(NonlinearProblem):
                     b_local.setValuesLocal(
                         dofs, basis_value * self.PS, addv=PETSc.InsertMode.ADD_VALUES
                     )
-        # Apply boundary condition
+
         apply_lifting(b, [self._a], bcs=[self.bcs], x0=[x], scale=-1.0)
         b.ghostUpdate(addv=PETSc.InsertMode.ADD, mode=PETSc.ScatterMode.REVERSE)
         set_bc(b, self.bcs, x, -1.0)
@@ -691,7 +691,7 @@ u_P2B3 = q_func.sub(0).collapse()
 theta_P2 = q_func.sub(1).collapse()
 
 # Interpolate phi in the [P2]³ Space
-phi_FS = FunctionSpace(mesh, ufl.VectorElement("Lagrange", ufl.triangle, degree=2, dim=3))
+phi_FS = functionspace(mesh, blocked_element(P2, shape=(3,)))
 phi_expr = Expression(phi0_ufl + u_P2B3, phi_FS.element.interpolation_points())
 phi_func = Function(phi_FS)
 phi_func.interpolate(phi_expr)
@@ -700,7 +700,7 @@ phi_func.interpolate(phi_expr)
 u_P2 = Function(phi_FS)
 u_P2.interpolate(u_P2B3)
 
-results_folder = Path("results/nonlinear_Naghdi/semi_cylinder")
+results_folder = Path("results/nonlinear_naghdi/semi_cylinder")
 results_folder.mkdir(exist_ok=True, parents=True)
 
 with dolfinx.io.VTXWriter(mesh.comm, results_folder / "u_naghdi.bp", [u_P2]) as vtx:
@@ -781,7 +781,7 @@ if mesh.comm.rank == 0:
             1.0,
         ]
     )
-    plt.plot(-u3_list, PS_list, label="FEniCSx-shell 20 x 20")
+    plt.plot(-u3_list, PS_list, label="FEniCSx-Shells 20 x 20")
     plt.plot(reference_u3, reference_P, "or", label="Sze (Abaqus S4R)")
     plt.xlabel("Displacement (mm)")
     plt.ylabel("Load (N)")
