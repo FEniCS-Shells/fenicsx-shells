@@ -66,16 +66,16 @@ along with the appropriate general [FEniCS citations](http://fenicsproject.org/c
 
 ## Authors
 
-Jack S. Hale, University of Luxembourg, Luxembourg.
-Tian Yang, EPFL, Switzerland.
+- Jack S. Hale, University of Luxembourg, Luxembourg.
+- Tian Yang, EPFL, Switzerland.
 
 FEniCSx-Shells contains code and text adapted from the FEniCS-Shells project
 hosted on [BitBucket](https://bitbucket.org/unilucompmech/fenics-shells)
 authored by:
 
-Corrado Maurini, Sorbonne Université, France.
-Jack S. Hale, University of Luxembourg, Luxembourg.
-Matteo Brunetti, University of Udine, Udine.
+- Matteo Brunetti, University of Udine, Udine.
+- Jack S. Hale, University of Luxembourg, Luxembourg.
+- Corrado Maurini, Sorbonne Université, France.
 
 ## Contributing
 
