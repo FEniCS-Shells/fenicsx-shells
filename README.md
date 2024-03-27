@@ -12,7 +12,7 @@ numerical methods for solving a wide range of thin structural models (beams,
 plates and shells) expressed in the Unified Form Language (UFL) of the FEniCS
 Project.
 
-*FEniCSx-Shells is an experimental version targeting version v0.7.2 of the new
+*FEniCSx-Shells is an experimental version targeting version v0.8.0.dev0 of the new
 [DOLFINx solver](https://github.com/fenics/dolfinx).*
 
 The foundational aspects of the FEniCS-Shells project are described in the paper:
@@ -66,10 +66,16 @@ along with the appropriate general [FEniCS citations](http://fenicsproject.org/c
 
 ## Authors
 
-Jack S. Hale, University of Luxembourg, Luxembourg.
+- Jack S. Hale, University of Luxembourg, Luxembourg.
+- Tian Yang, EPFL, Switzerland.
 
-FEniCSx-Shells contains code from the original FEniCS-Shells project
-hosted on [BitBucket](https://bitbucket.org/unilucompmech/fenics-shells).
+FEniCSx-Shells contains code and text adapted from the FEniCS-Shells project
+hosted on [BitBucket](https://bitbucket.org/unilucompmech/fenics-shells)
+authored by:
+
+- Matteo Brunetti, University of Udine, Udine.
+- Jack S. Hale, University of Luxembourg, Luxembourg.
+- Corrado Maurini, Sorbonne Université, France.
 
 ## Contributing
 

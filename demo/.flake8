@@ -5,3 +5,4 @@ per-file-ignores =
     demo_reissner-mindlin-clamped-tdnns.py: E501,
     demo_reissner-mindlin-clamped.py: E501,
     demo_reissner-mindlin-simply-supported.py: E501,
+    demo_nonlinear_naghdi_clamped_semicylinder.py: E501,
