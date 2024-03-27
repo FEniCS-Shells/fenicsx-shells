@@ -45,4 +45,4 @@ Selective Reduced Integration (PSRI) to cure shear and membrane locking:
     :titlesonly:
     :maxdepth: 1
 
-    demo/demo_nonlinear_naghdi_clamped_semicylinder.md
+    demo/demo_nonlinear-naghdi-clamped-semicylinder.md
