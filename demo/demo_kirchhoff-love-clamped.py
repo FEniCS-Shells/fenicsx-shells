@@ -210,11 +210,7 @@ problem = LinearProblem(
     a,
     L,
     bcs=bcs,
-    petsc_options={
-        "ksp_type": "preonly",
-        "pc_type": "lu",
-        "pc_factor_mat_solver_type": "superlu_dist",
-    },
+    petsc_options={"ksp_type": "preonly", "pc_type": "lu", "pc_factor_mat_solver_type": "mumps"},
 )
 u_h = problem.solve()
 
