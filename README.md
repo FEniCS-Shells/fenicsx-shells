@@ -69,8 +69,13 @@ along with the appropriate general [FEniCS citations](http://fenicsproject.org/c
 Jack S. Hale, University of Luxembourg, Luxembourg.
 Tian Yang, EPFL, Switzerland.
 
-FEniCSx-Shells contains code from the original FEniCS-Shells project
-hosted on [BitBucket](https://bitbucket.org/unilucompmech/fenics-shells).
+FEniCSx-Shells contains code and text adapted from the FEniCS-Shells project
+hosted on [BitBucket](https://bitbucket.org/unilucompmech/fenics-shells)
+authored by:
+
+Corrado Maurini, Sorbonne Université, France.
+Jack S. Hale, University of Luxembourg, Luxembourg.
+Matteo Brunetti, University of Udine, Udine.
 
 ## Contributing
 
