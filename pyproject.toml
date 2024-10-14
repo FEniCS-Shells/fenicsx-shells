@@ -5,13 +5,13 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "fenicsx-shells"
 version = "0.10.0.dev0"
-description = "FEniCSx-Shells"
+description = "A FEniCSx library for simulating thin structures"
 readme = "README.md"
 requires-python = ">=3.9.0"
 license = { file = "COPYING.LESSER" }
 authors = [
-      { email = "jack.hale@uni.lu" },
-      { name = "Jack S. Hale" },
+      { name = "Jack S. Hale", email = "mail@jackhale.co.uk" }
+      { name = "Tian Yang" }
 ]
 dependencies = [
       "fenics-dolfinx>=0.10.0.dev0,<0.11.0",
