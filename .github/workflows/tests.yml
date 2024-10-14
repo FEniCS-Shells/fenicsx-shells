@@ -48,7 +48,7 @@ jobs:
           .
       
       - name: Upload documentation artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: github-pages
           path: artifact.tar
