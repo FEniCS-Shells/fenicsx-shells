@@ -23,10 +23,10 @@ demo = []
 test = ["pytest"]
 lint = ["ruff"]
 ci = [
-    "dolfinx-external-operator[doc]",
-    "dolfinx-external-operator[demo]",
-    "dolfinx-external-operator[test]",
-    "dolfinx-external-operator[lint]",
+    "fenicsx-shells[doc]",
+    "fenicsx-shells[demo]",
+    "fenicsx-shells[test]",
+    "fenicsx-shells[lint]",
 ]
 
 [tool.ruff]
