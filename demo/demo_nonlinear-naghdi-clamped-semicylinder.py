@@ -545,10 +545,12 @@ def compute_cell_contributions(V, points):
     at that point"""
     # Determine what process owns a point and what cells it lies within
     mesh = V.mesh
-    _, _, owning_points, cells = dolfinx.cpp.geometry.determine_point_ownership(
+    point_ownership_data = dolfinx.cpp.geometry.determine_point_ownership(
         mesh._cpp_object, points, 1e-6
     )
-    owning_points = np.asarray(owning_points).reshape(-1, 3)
+
+    owning_points = np.asarray(point_ownership_data.dest_points).reshape(-1, 3)
+    cells = point_ownership_data.dest_cells
 
     # Pull owning points back to reference cell
     mesh_nodes = mesh.geometry.x
@@ -618,7 +620,7 @@ class NonlinearProblemPointSource(NonlinearProblem):
                         dofs, basis_value * self.PS, addv=PETSc.InsertMode.ADD_VALUES
                     )
 
-        apply_lifting(b, [self._a], bcs=[self.bcs], x0=[x], scale=-1.0)
+        apply_lifting(b, [self._a], bcs=[self.bcs], x0=[x], alpha=-1.0)
         b.ghostUpdate(addv=PETSc.InsertMode.ADD, mode=PETSc.ScatterMode.REVERSE)
         set_bc(b, self.bcs, x, -1.0)
 
