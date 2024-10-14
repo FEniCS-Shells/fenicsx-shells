@@ -10,7 +10,6 @@ updates:
     schedule:
       interval: "weekly"
   - package-ecosystem: "pip" # See documentation for possible values
-    directories:
-      - "src/fenicsx_shells"
+    directory: "/"
     schedule:
       interval: "weekly"
