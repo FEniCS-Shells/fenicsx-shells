@@ -19,7 +19,7 @@ dependencies = [
 
 [project.optional-dependencies]
 doc = ["jupytext", "myst_parser", "sphinx_rtd_theme", "sphinx"]
-demo = []
+demo = ["matplotlib"]
 test = ["pytest"]
 lint = ["ruff"]
 ci = [
