@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.9.0"
 license = { file = "COPYING.LESSER" }
 authors = [
-      { name = "Jack S. Hale", email = "mail@jackhale.co.uk" }
+      { name = "Jack S. Hale", email = "mail@jackhale.co.uk" },
       { name = "Tian Yang" }
 ]
 dependencies = [
