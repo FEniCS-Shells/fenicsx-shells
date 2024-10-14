@@ -15,9 +15,9 @@ import jupytext_process
 jupytext_process.process()
 
 project = "FEniCSx-Shells"
-copyright = "2022, FEniCSx-Shells Authors"
+copyright = "2022-2024, FEniCSx-Shells Authors"
 author = "FEniCSx-Shells Authors"
-release = "0.5.0.dev0"
+release = "0.10.0.dev0"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -55,5 +55,4 @@ autoclass_content = "both"
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = "alabaster"
 html_static_path = ["_static"]
