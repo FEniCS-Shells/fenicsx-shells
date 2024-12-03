@@ -232,7 +232,7 @@ cells = dolfinx.geometry.compute_colliding_cells(mesh, cell_candidates, point)
 
 theta, w, R_gamma, p = u_.split()
 
-if len(cells) > 0:
+if cells.array.shape[0] > 0:
     value = w.eval(point, cells.array[0])
     print(value[0])
     # NOTE: FEniCS-Shells (old dolfin) `demo/documented/reissner-mindlin-clamped`
