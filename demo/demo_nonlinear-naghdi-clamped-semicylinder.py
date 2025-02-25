@@ -455,7 +455,7 @@ dx_r = ufl.Measure("dx", domain=mesh, metadata={"quadrature_degree": 2})
 # Calculate the factor alpha as a function of the mesh size h
 h = ufl.CellDiameter(mesh)
 alpha_FS = functionspace(mesh, element("DG", cell, 0))
-alpha_expr = Expression(t**2 / h**2, alpha_FS.element.interpolation_points())
+alpha_expr = Expression(t**2 / h**2, alpha_FS.element.interpolation_points)
 alpha = Function(alpha_FS)
 alpha.interpolate(alpha_expr)
 
@@ -693,7 +693,7 @@ theta_P2 = q_func.sub(1).collapse()
 
 # Interpolate phi in the [P2]³ Space
 phi_FS = functionspace(mesh, blocked_element(P2, shape=(3,)))
-phi_expr = Expression(phi0_ufl + u_P2B3, phi_FS.element.interpolation_points())
+phi_expr = Expression(phi0_ufl + u_P2B3, phi_FS.element.interpolation_points)
 phi_func = Function(phi_FS)
 phi_func.interpolate(phi_expr)
 
