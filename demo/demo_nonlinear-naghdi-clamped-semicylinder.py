@@ -455,7 +455,7 @@ dx_r = ufl.Measure("dx", domain=mesh, metadata={"quadrature_degree": 2})
 # Calculate the factor alpha as a function of the mesh size h
 h = ufl.CellDiameter(mesh)
 alpha_FS = functionspace(mesh, element("DG", cell, 0))
-alpha_expr = Expression(t**2 / h**2, alpha_FS.element.interpolation_points)
+alpha_expr = Expression(t**2 / h**2, alpha_FS.element.interpolation_points())
 alpha = Function(alpha_FS)
 alpha.interpolate(alpha_expr)
 
@@ -614,11 +614,11 @@ class NonlinearProblemPointSource(NonlinearProblem):
         # Add point source
         if len(self.cells) > 0:
             for cell, basis_value in zip(self.cells, self.basis_values):
-                dofs = self.function_space.sub(0).sub(2).dofmap.cell_dofs(cell)
-                with b.localForm() as b_local:
-                    b_local.setValuesLocal(
-                        dofs, basis_value * self.PS, addv=PETSc.InsertMode.ADD_VALUES
-                    )
+                ldofs  = self.function_space.sub(0).sub(2).dofmap.cell_dofs(cell)
+                idxmap = self.function_space.sub(0).sub(2).dofmap.index_map
+                gdofs  = idxmap.local_to_global(ldofs).astype(PETSc.IntType)
+                b.setValues(gdofs, basis_value * self.PS, addv=PETSc.InsertMode.ADD_VALUES)
+            b.assemblyBegin(); b.assemblyEnd()
 
         apply_lifting(b, [self._a], bcs=[self.bcs], x0=[x], alpha=-1.0)
         b.ghostUpdate(addv=PETSc.InsertMode.ADD, mode=PETSc.ScatterMode.REVERSE)
@@ -693,7 +693,7 @@ theta_P2 = q_func.sub(1).collapse()
 
 # Interpolate phi in the [P2]³ Space
 phi_FS = functionspace(mesh, blocked_element(P2, shape=(3,)))
-phi_expr = Expression(phi0_ufl + u_P2B3, phi_FS.element.interpolation_points)
+phi_expr = Expression(phi0_ufl + u_P2B3, phi_FS.element.interpolation_points())
 phi_func = Function(phi_FS)
 phi_func.interpolate(phi_expr)
 
