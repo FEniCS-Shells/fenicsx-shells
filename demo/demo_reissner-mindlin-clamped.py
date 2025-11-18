@@ -222,7 +222,7 @@ problem = LinearProblem(
     -F,
     bcs=bcs,
     petsc_options={"ksp_type": "preonly", "pc_type": "lu", "pc_factor_mat_solver_type": "mumps"},
-    petsc_options_prefix="problem_"
+    petsc_options_prefix="problem_",
 )
 u_ = problem.solve()
 

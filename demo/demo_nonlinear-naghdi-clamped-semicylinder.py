@@ -28,6 +28,7 @@
 #
 # %%
 import typing
+import warnings
 from pathlib import Path
 
 # %%
@@ -49,6 +50,8 @@ from dolfinx.fem.petsc import NewtonSolverNonlinearProblem, apply_lifting, assem
 from dolfinx.mesh import CellType, create_rectangle, locate_entities_boundary
 from dolfinx.nls.petsc import NewtonSolver
 from ufl import grad, inner, split
+
+warnings.simplefilter("default", DeprecationWarning)
 
 # %% [markdown]
 # We consider a semi-cylindrical shell of radius $r$ and axis length $L$. The
@@ -545,9 +548,7 @@ def compute_cell_contributions(V, points):
     at that point"""
     # Determine what process owns a point and what cells it lies within
     mesh = V.mesh
-    point_ownership_data = dolfinx.geometry.determine_point_ownership(
-        mesh, points, 1e-6
-    )
+    point_ownership_data = dolfinx.geometry.determine_point_ownership(mesh, points, 1e-6)
 
     owning_points = np.asarray(point_ownership_data.dest_points).reshape(-1, 3)
     cells = point_ownership_data.dest_cells
