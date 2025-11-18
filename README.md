@@ -12,7 +12,7 @@ numerical methods for solving a wide range of thin structural models (beams,
 plates and shells) expressed in the Unified Form Language (UFL) of the FEniCS
 Project.
 
-*FEniCSx-Shells is an experimental version targeting version v0.10.0.dev0 of the new
+*FEniCSx-Shells is an experimental version targeting version v0.10.0 of the new
 [DOLFINx solver](https://github.com/fenics/dolfinx).*
 
 The foundational aspects of the FEniCS-Shells project are described in the paper:
@@ -21,6 +21,20 @@ Simple and extensible plate and shell finite element models through automatic
 code generation tools, J. S. Hale, M. Brunetti, S. P. A. Bordas, C. Maurini.
 Computers & Structures, 209, 163-181,
 [doi:10.1016/j.compstruc.2018.08.001](https://doi.org/10.1016/j.compstruc.2018.08.001).
+
+## Installation
+
+See the [DOLFINx README -
+Installation](https://github.com/FEniCS/dolfinx/blob/main/README.md#installation) for
+instructions on installing DOLFINx with petsc4py support.
+
+Then:
+
+    pip install fenicsx-shells[demos]@git+https://github.com/FEniCS-Shells/fenicsx-shells.git
+
+At the current time, the `fenicsx-shells` module is empty, and the content of
+the 'library' is in the demos. This may change as we begin implementing e.g.
+custom assemblers.
 
 ## Documentation
 
@@ -32,8 +46,6 @@ FEniCSx-Shells currently includes implementations of the following structural mo
 
 * Reissner-Mindlin plates.
 * Kirchhoff-Love plates.
-
-A roadmap for future developments will be shared soon.
 
 We are using a variety of numerical techniques for discretising the PDEs
 including:
